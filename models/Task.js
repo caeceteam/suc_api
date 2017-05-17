@@ -1,5 +1,4 @@
 /* jshint indent: 2 */
-"use strict";
 
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('task', {
@@ -18,5 +17,7 @@ module.exports = function(sequelize, DataTypes) {
     }
   }, {
     tableName: 'task'
-  });
+  },{
+timestamps: false
+});
 };
