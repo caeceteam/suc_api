@@ -31,7 +31,11 @@ module.exports = function(sequelize, DataTypes) {
     },
     idDiner: {
       type: DataTypes.BIGINT,
-      allowNull: false
+      allowNull: false,
+      references: {
+        model: 'Diner',
+        key: 'idDiner'
+      }
     },
     phone: {
       type: DataTypes.STRING(20),
@@ -54,6 +58,6 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true
     }
   }, {
-    tableName: 'User', timestamps:false
+    tableName: 'User'
   });
 };
