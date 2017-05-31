@@ -7,7 +7,7 @@ var Sequelize = require('sequelize');
 /* GET users listing. */
 router.get('/:idInputType?', function (req, res, next) {
     var idInputType = req.params.idInputType;
-    var inputTypes = models.inputTypes;
+    var inputTypes = models.InputType;
     if (idInputType) {
         inputTypes.find({ where: { idInputType: idInputType } }).then(function (inputType, err) {
             if (err) {
@@ -15,7 +15,7 @@ router.get('/:idInputType?', function (req, res, next) {
                 return res.sendStatus(401);
             }
 
-            if (!user) {
+            if (!inputType) {
                 // incorrect inputType
                 return res.sendStatus(404);
             }
@@ -33,7 +33,7 @@ router.get('/:idInputType?', function (req, res, next) {
 
 /* POST de user. */
 router.post('/', function (req, res, next) {
-    var inputTypes = models.inputTypes;
+    var inputTypes = models.InputType;
     var code = req.body.code;
     var name = req.body.name;
     var description = req.body.description;
@@ -54,7 +54,7 @@ router.post('/', function (req, res, next) {
 
 
 router.put('/:idInputType', function (req, res, next) {
-    var inputTypes = models.inputTypes;
+    var inputTypes = models.InputType;
     var idInputType = req.params.idInputType;
     inputTypes.find({ where: {idInputType: idInputType} }).then(function (inputType) {
         inputType.code = req.body.code;
@@ -66,7 +66,7 @@ router.put('/:idInputType', function (req, res, next) {
 });
 
 router.delete('/:idInputType', function (req, res, next) {
-var inputTypes = models.inputTypes;
+var inputTypes = models.InputType;
   var idInputType = req.params.idInputType;
   inputTypes.destroy({where:{ idInputType: idInputType }}).then(function (result) {
     var status
