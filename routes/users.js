@@ -49,7 +49,6 @@ router.post('/:user?', function (req, res, next) {
   var bornDate = req.body.bornDate;
   var state = req.body.state;
   var hashedPass = hash.update(password).digest("base64");
-  console.log(hashedPass);
   var postUser = {
     name: name,
     surname: surname,
@@ -57,15 +56,50 @@ router.post('/:user?', function (req, res, next) {
     pass: hashedPass,
     mail: mail,
     phone: phone, idDiner: idDiner, role: role,
-    docNumber: docNumber, bornDate: bornDate,state:state
+    docNumber: docNumber, bornDate: bornDate, state: state
   };
-  console.log(postUser);
   User.create(postUser).then(function (user) {
-    res.json(user);
+    res.status(201).json(user);
   }).catch(error => {
-                console.log(error);
-      });;
+    console.log(error);
+    res.status(error.errno);
+  });;
 
+});
+
+
+router.put('/:user', function (req, res, next) {
+  var User = models.User;
+  var userName = req.params.user;
+  User.find({ where: Sequelize.or({ alias: userName }, { mail: userName }) }).then(function (user) {
+    user.name = req.body.name;
+    user.surname = req.body.surname;
+    user.alias = req.body.alias;
+    user.password = req.body.pass;
+    user.mail = req.body.mail;
+    user.idDiner = req.body.idDiner;
+    user.phone = req.body.phone;
+    user.role = req.body.role;
+    user.docNumber = req.body.docNumber;
+    user.bornDate = req.body.bornDate;
+    user.state = req.body.state;
+    user.save();
+    res.status(202).json(user);
+  });
+});
+
+router.delete('/:user', function (req, res, next) {
+  var User = models.User;
+  var userName = req.params.user;
+  User.destroy({where:{ alias: userName }}).then(function (result) {
+    var status
+    if(result == 1){
+      status = 200;
+    }else{
+      status = 204;
+    }
+    res.sendStatus(status);
+  });
 });
 
 module.exports = router;
