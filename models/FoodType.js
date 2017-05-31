@@ -5,7 +5,8 @@ module.exports = function(sequelize, DataTypes) {
     idFoodType: {
       type: DataTypes.BIGINT,
       allowNull: false,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     code: {
       type: DataTypes.STRING(15),
