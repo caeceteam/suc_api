@@ -35,29 +35,7 @@ router.get('/:user?', function (req, res, next) {
 /* POST de user. */
 router.post('/:user?', function (req, res, next) {
   var User = models.User;
-  var hash = crypto.createHash('sha256');
-
-  var name = req.body.name;
-  var surname = req.body.surname;
-  var alias = req.body.alias;
-  var password = req.body.pass;
-  var mail = req.body.mail;
-  var idDiner = req.body.idDiner;
-  var phone = req.body.phone;
-  var role = req.body.role;
-  var docNumber = req.body.docNumber;
-  var bornDate = req.body.bornDate;
-  var state = req.body.state;
-  var hashedPass = hash.update(password).digest("base64");
-  var postUser = {
-    name: name,
-    surname: surname,
-    alias: alias,
-    pass: hashedPass,
-    mail: mail,
-    phone: phone, idDiner: idDiner, role: role,
-    docNumber: docNumber, bornDate: bornDate, state: state
-  };
+  var postUser = getPostUser(req.body);
   User.create(postUser).then(function (user) {
     res.status(201).json(user);
   }).catch(error => {
@@ -67,6 +45,20 @@ router.post('/:user?', function (req, res, next) {
 
 });
 
+router.getPostUser = function(request){
+  var hash = crypto.createHash('sha256');
+  var password = request.pass;
+  var hashedPass = hash.update(password).digest("base64");
+  return {
+    name: request.name,
+    surname: request.surname,
+    alias: request.alias,
+    pass: hashedPass,
+    mail: request.mail,
+    phone: request.phone, idDiner: request.idDiner, role: request.role,
+    docNumber: request.docNumber, bornDate: request.bornDate, state: request.state
+  };
+}
 
 router.put('/:user', function (req, res, next) {
   var User = models.User;
@@ -99,7 +91,10 @@ router.delete('/:user', function (req, res, next) {
       status = 204;
     }
     res.sendStatus(status);
-  });
+  }).catch(error => {
+        console.log(error);
+        res.status(error.errno);
+    });
 });
 
 module.exports = router;

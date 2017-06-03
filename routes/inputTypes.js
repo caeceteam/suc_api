@@ -4,7 +4,7 @@ var models = require('../models/');
 var app = express();
 var Sequelize = require('sequelize');
 
-/* GET users listing. */
+/* GET inputTypes listing. */
 router.get('/:idInputType?', function (req, res, next) {
     var idInputType = req.params.idInputType;
     var inputTypes = models.InputType;
@@ -31,7 +31,7 @@ router.get('/:idInputType?', function (req, res, next) {
     }
 });
 
-/* POST de user. */
+/* POST de inputTypes. */
 router.post('/', function (req, res, next) {
     var inputTypes = models.InputType;
     var code = req.body.code;
@@ -76,7 +76,10 @@ var inputTypes = models.InputType;
       status = 204;
     }
     res.sendStatus(status);
-  });
+  }).catch(error => {
+        console.log(error);
+        res.status(error.errno);
+    });
 });
 
 module.exports = router;
