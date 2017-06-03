@@ -35,13 +35,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 apiRoutes.use(function (req, res, next) {
 
 
-  if (req.method == "POST" && (req.url.includes("users")||req.url.includes("diners"))) {
-    console.log("entro");
+  if (shouldAvoidTokenValidation(req)){
     next();
   } else {
     validateToken(req, res, next);
   }
 });
+
+var shouldAvoidTokenValidation = function(req){
+  return req.method == "POST" && req.url.includes("users") || req.url.includes("diners")
+}
 
 var validateToken = function (req, res, next) {
   // check header or url parameters or post parameters for token
