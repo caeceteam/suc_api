@@ -4,7 +4,7 @@ var models = require('../models/');
 var app = express();
 var Sequelize = require('sequelize');
 
-/* GET users listing. */
+/* GET foodTypes listing. */
 router.get('/:idFoodType?', function (req, res, next) {
     var idFoodType = req.params.idFoodType;
     var foodTypes = models.FoodType;
@@ -31,7 +31,7 @@ router.get('/:idFoodType?', function (req, res, next) {
     }
 });
 
-/* POST de user. */
+/* POST de foodTypes. */
 router.post('/', function (req, res, next) {
     var foodTypes = models.FoodType;
     var code = req.body.code;
