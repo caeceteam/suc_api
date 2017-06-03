@@ -3,6 +3,7 @@ var router = express.Router();
 var models = require('../models/');
 var app = express();
 var Sequelize = require('sequelize');
+var usersRouter = require('./users');
 
 /* GET foodTypes listing. */
 router.get('/:idDiner?', function (req, res, next) {
@@ -37,7 +38,28 @@ router.post('/', function (req, res, next) {
     var dinerRequest = req.body.diner;
     var userRequest = req.body.user;
     var idDiner;
-    var postDiner = {
+    var postDiner = getDinerRequest(dinerRequest);
+    var postUser = usersRouter.getPostUser(userRequest);
+    diners.create(postDiner).then(function (diner) {
+        idDiner = diner.idDiner;
+        postUser.idDiner = idDiner;
+        var users = models.User;
+        var createdUser;
+        users.create(postUser).then(function (user) {
+            createdUser = user;
+            res.status(201).json({ diner: diner, user: createdUser });
+        }).catch(error => {
+            console.log(error);
+            res.status(error.errno);
+        });
+    }).catch(error => {
+        console.log(error);
+        res.status(error.errno);
+    });
+});
+
+var getDinerRequest = function (dinerRequest) {
+    return {
         name: dinerRequest.name,
         street: dinerRequest.street,
         streetNumber: dinerRequest.streetNumber,
@@ -52,17 +74,7 @@ router.post('/', function (req, res, next) {
         mail: dinerRequest.mail,
         idCity: dinerRequest.idCity
     }
-
-    diners.create(postDiner).then(function (diner) {
-        idDiner = diner.idDiner;
-        //Continuar con el alta de usuario.
-        res.status(201).json(diner);
-    }).catch(error => {
-        console.log(error);
-        res.status(error.errno);
-    });;
-});
-
+}
 
 router.put('/:idDiner', function (req, res, next) {
     var diners = models.Diner;
@@ -98,6 +110,9 @@ router.delete('/:idDiner', function (req, res, next) {
             status = 204;
         }
         res.sendStatus(status);
+    }).catch(error => {
+        console.log(error);
+        res.status(error.errno);
     });
 });
 

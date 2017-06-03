@@ -76,7 +76,10 @@ var inputTypes = models.InputType;
       status = 204;
     }
     res.sendStatus(status);
-  });
+  }).catch(error => {
+        console.log(error);
+        res.status(error.errno);
+    });
 });
 
 module.exports = router;

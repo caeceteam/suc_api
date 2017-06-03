@@ -35,7 +35,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 apiRoutes.use(function (req, res, next) {
 
 
-  if (req.method == "POST" && req.url.includes("users")) {
+  if (req.method == "POST" && (req.url.includes("users")||req.url.includes("diners"))) {
     console.log("entro");
     next();
   } else {
