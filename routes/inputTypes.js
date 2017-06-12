@@ -3,6 +3,9 @@ var router = express.Router();
 var models = require('../models/');
 var app = express();
 var Sequelize = require('sequelize');
+var expressValidator = require('express-validator');
+
+app.use(expressValidator); 
 
 /* GET inputTypes listing. */
 router.get('/:idInputType?', function (req, res, next) {
