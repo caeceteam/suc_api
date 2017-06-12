@@ -59,6 +59,10 @@ module.exports = function(sequelize, DataTypes) {
     idCity: {
       type: DataTypes.BIGINT,
       allowNull: true
+    },
+    state: {
+      type: DataTypes.INTEGER(11),
+      allowNull: false
     }
   }, {
     timestamps: false,

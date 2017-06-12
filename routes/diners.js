@@ -101,19 +101,37 @@ router.put('/:idDiner', function (req, res, next) {
 
 router.delete('/:idDiner', function (req, res, next) {
     var diners = models.Diner;
+    var usersModel = models.User;
     var idDiner = req.params.idDiner;
-    diners.destroy({ where: { idDiner: idDiner } }).then(function (result) {
-        var status
-        if (result == 1) {
-            status = 200;
+    var users;
+    usersModel.findAll({ where: { idDiner: idDiner } }).then(function (usersResult) {
+        users = usersResult;
+        if (users.length == 0) {
+            diners.destroy({ where: { idDiner: idDiner } }).then(function (result) {
+                var status
+                if (result == 1) {
+                    status = 200;
+                } else {
+                    status = 204;
+                }
+                res.sendStatus(status);
+            }).catch(error => {
+                console.log(error);
+                res.status(error.errno);
+            });
         } else {
-            status = 204;
+            diners.find({ where: { idDiner: idDiner } }).then(function (diner) {
+                diner.state = 0;
+                diner.save();
+                res.status(202).json(diner);
+            });
         }
-        res.sendStatus(status);
     }).catch(error => {
         console.log(error);
         res.status(error.errno);
     });
+
+
 });
 
 module.exports = router;
