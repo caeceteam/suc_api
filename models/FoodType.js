@@ -20,6 +20,10 @@ module.exports = function(sequelize, DataTypes) {
     description: {
       type: DataTypes.STRING(45),
       allowNull: true
+    },
+    perishable: {
+      type: DataTypes.INTEGER(4),
+      allowNull: true
     }
   }, {
     timestamps: false,
