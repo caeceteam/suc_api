@@ -5,7 +5,8 @@ module.exports = function(sequelize, DataTypes) {
     idInput: {
       type: DataTypes.BIGINT,
       allowNull: false,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     idInputType: {
       type: DataTypes.BIGINT,
