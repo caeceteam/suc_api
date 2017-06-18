@@ -37,11 +37,13 @@ router.post('/', function (req, res, next) {
     var code = req.body.code;
     var name = req.body.name;
     var description = req.body.description;
+    var perishable = req.body.perishable;
 
     var postFoodType = {
         code: code,
         name: name,
-        description: description
+        description: description,
+        perishable: perishable
     }
 
     foodTypes.create(postFoodType).then(function (foodType) {
@@ -60,6 +62,7 @@ router.put('/:idFoodType', function (req, res, next) {
         foodType.code = req.body.code;
         foodType.name = req.body.name;
         foodType.description = req.body.description;
+        foodType.perishable = req.body.perishable;
         foodType.save();
         res.status(202).json(foodType);
     });
