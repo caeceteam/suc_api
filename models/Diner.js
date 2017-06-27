@@ -12,20 +12,24 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(80),
       allowNull: false
     },
-    street: {
-      type: DataTypes.STRING(60),
+    state: {
+      type: DataTypes.INTEGER(11),
       allowNull: false
+    },
+    street: {
+      type: DataTypes.STRING(50),
+      allowNull: true
     },
     streetNumber: {
-      type: DataTypes.STRING(10),
-      allowNull: false
+      type: DataTypes.INTEGER(11),
+      allowNull: true
     },
     floor: {
-      type: DataTypes.STRING(5),
+      type: DataTypes.STRING(10),
       allowNull: true
     },
     door: {
-      type: DataTypes.STRING(5),
+      type: DataTypes.STRING(20),
       allowNull: true
     },
     latitude: {
@@ -37,15 +41,15 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true
     },
     zipCode: {
-      type: DataTypes.STRING(8),
-      allowNull: false
+      type: DataTypes.STRING(5),
+      allowNull: true
     },
     phone: {
-      type: DataTypes.STRING(13),
-      allowNull: false
+      type: DataTypes.STRING(20),
+      allowNull: true
     },
     description: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.TEXT,
       allowNull: true
     },
     link: {
@@ -53,19 +57,11 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true
     },
     mail: {
-      type: DataTypes.STRING(60),
-      allowNull: true
-    },
-    idCity: {
-      type: DataTypes.BIGINT,
-      allowNull: true
-    },
-    state: {
-      type: DataTypes.INTEGER(11),
+      type: DataTypes.STRING(50),
       allowNull: false
     }
   }, {
-    timestamps: false,
+    timestamps:false,
     tableName: 'Diner'
   });
 };
