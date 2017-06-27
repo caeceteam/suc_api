@@ -43,7 +43,6 @@ router.post('/:user?', function (req, res, next) {
   });
 });
 
-router.getPostUser = getPostUser;
 var getPostUser = function (request) {
   var hash = crypto.createHash('sha256');
   var password = request.pass;
@@ -58,6 +57,9 @@ var getPostUser = function (request) {
     docNumber: request.docNumber, bornDate: request.bornDate, state: request.state
   };
 };
+
+router.getPostUser = getPostUser;
+
 
 router.put('/:searchParam', function (req, res, next) {
   var User = models.User;
