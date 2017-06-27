@@ -12,12 +12,12 @@ router.get('/:idFoodType?', function (req, res, next) {
         foodTypes.find({ where: { idFoodType: idFoodType } }).then(function (foodType, err) {
             if (err) {
                 // foodType not found 
-                return res.sendStatus(401);
+                return res.status(401).json({});
             }
 
             if (!foodType) {
                 // incorrect foodType
-                return res.sendStatus(404);
+                return res.status(404).json({});
             }
 
             res.json({
@@ -34,54 +34,58 @@ router.get('/:idFoodType?', function (req, res, next) {
 /* POST de foodTypes. */
 router.post('/', function (req, res, next) {
     var foodTypes = models.FoodType;
-    var code = req.body.code;
-    var name = req.body.name;
-    var description = req.body.description;
-    var perishable = req.body.perishable;
 
     var postFoodType = {
-        code: code,
-        name: name,
-        description: description,
-        perishable: perishable
+        code: req.body.code,
+        name: req.body.name,
+        description: req.body.description,
+        perishable: req.body.perishable,
+        diabetic: req.body.diabetic,
+        celiac: req.body.celiac
     }
 
     foodTypes.create(postFoodType).then(function (foodType) {
         res.status(201).json(foodType);
     }).catch(error => {
-        console.log(error);
-        res.status(error.errno);
-    });;
+        res.status(500).json({ 'result': 'Ocurrio un error creando el foodType' });
+    });
 });
 
 
 router.put('/:idFoodType', function (req, res, next) {
     var foodTypes = models.FoodType;
     var idFoodType = req.params.idFoodType;
-    foodTypes.find({ where: {idFoodType: idFoodType} }).then(function (foodType) {
-        foodType.code = req.body.code;
-        foodType.name = req.body.name;
-        foodType.description = req.body.description;
-        foodType.perishable = req.body.perishable;
-        foodType.save();
-        res.status(202).json(foodType);
+    foodTypes.find({ where: { idFoodType: idFoodType } }).then(function (foodType) {
+        if (foodType) {
+            foodType.update({
+                code: req.body.code,
+                name: req.body.name,
+                description: req.body.description,
+                perishable: req.body.perishable,
+                diabetic: req.body.diabetic,
+                celiac: req.body.celiac
+            }).then(function (updatedFT) {
+                res.status(202).json(foodType);
+            }).catch(error => {
+                res.status(500).json({ 'result': 'Ha ocurrido un error actulizando el foodType ' + idFoodType });
+            });
+        } else {
+            res.status(404).json({ 'result': 'No se encontro el foodType ' + idFoodType + ' para hacer el update' });
+        }
     });
 });
 
 router.delete('/:idFoodType', function (req, res, next) {
-var foodTypes = models.FoodType;
-  var idFoodType = req.params.idFoodType;
-  foodTypes.destroy({where:{ idFoodType: idFoodType }}).then(function (result) {
-    var status
-    if(result == 1){
-      status = 200;
-    }else{
-      status = 204;
-    }
-    res.sendStatus(status);
-  }).catch(error => {
-        console.log(error);
-        res.status(error.errno);
+    var foodTypes = models.FoodType;
+    var idFoodType = req.params.idFoodType;
+    foodTypes.destroy({ where: { idFoodType: idFoodType } }).then(function (result) {
+        if (result == 1) {
+            res.status(200).json({ 'result': "Se ha borrado el foodType " + idFoodType });
+        } else {
+            res.status(204).json({ 'result': "No se ha podido borrar el foodType " + idFoodType });
+        }
+    }).catch(error => {
+        res.status(500).json({ 'result': 'Error eliminando el foodType ' + idFoodType });
     });
 });
 
