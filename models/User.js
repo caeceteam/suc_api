@@ -9,56 +9,59 @@ module.exports = function(sequelize, DataTypes) {
       autoIncrement: true
     },
     name: {
-      type: DataTypes.STRING(45),
+      type: DataTypes.STRING(50),
       allowNull: false
     },
     surname: {
-      type: DataTypes.STRING(45),
-      allowNull: false
-    },
-    alias: {
-      type: DataTypes.STRING(12),
-      allowNull: false,
-      unique: true
-    },
-    pass: {
-      type: DataTypes.CHAR(64),
+      type: DataTypes.STRING(50),
       allowNull: false
     },
     mail: {
-      type: DataTypes.STRING(60),
+      type: DataTypes.STRING(50),
       allowNull: false
-    },
-    idDiner: {
-      type: DataTypes.BIGINT,
-      allowNull: false,
-      references: {
-        model: 'Diner',
-        key: 'idDiner'
-      }
     },
     phone: {
-      type: DataTypes.STRING(20),
-      allowNull: true
-    },
-    state: {
-      type: DataTypes.INTEGER(11),
-      allowNull: false
-    },
-    role: {
-      type: DataTypes.INTEGER(11),
-      allowNull: false
-    },
-    docNumber: {
       type: DataTypes.STRING(20),
       allowNull: true
     },
     bornDate: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    role: {
+      type: DataTypes.INTEGER(11),
+      allowNull: false
+    },
+    pass: {
+      type: DataTypes.STRING(64),
+      allowNull: false
+    },
+    alias: {
+      type: DataTypes.STRING(20),
+      allowNull: false
+    },
+    docNum: {
+      type: DataTypes.STRING(13),
+      allowNull: true
+    },
+    street: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    streetNumber: {
+      type: DataTypes.INTEGER(11),
+      allowNull: true
+    },
+    floor: {
+      type: DataTypes.STRING(10),
+      allowNull: true
+    },
+    door: {
+      type: DataTypes.STRING(20),
+      allowNull: true
     }
   }, {
-    timestamps: false,
+    timestamps:false,
     tableName: 'User'
   });
 };

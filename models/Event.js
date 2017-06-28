@@ -1,19 +1,15 @@
 /* jshint indent: 2 */
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('Diner', {
-    idDiner: {
+  return sequelize.define('Event', {
+    idEvent: {
       type: DataTypes.BIGINT,
       allowNull: false,
       primaryKey: true,
       autoIncrement: true
     },
     name: {
-      type: DataTypes.STRING(80),
-      allowNull: false
-    },
-    state: {
-      type: DataTypes.INTEGER(11),
+      type: DataTypes.STRING(50),
       allowNull: false
     },
     street: {
@@ -32,36 +28,36 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(20),
       allowNull: true
     },
-    latitude: {
-      type: DataTypes.FLOAT,
-      allowNull: true
-    },
-    longitude: {
-      type: DataTypes.FLOAT,
-      allowNull: true
-    },
     zipCode: {
-      type: DataTypes.STRING(5),
+      type: DataTypes.CHAR(5),
       allowNull: true
     },
     phone: {
       type: DataTypes.STRING(20),
       allowNull: true
     },
-    description: {
+    date: {
+      type: DataTypes.DATE,
+      allowNull: false
+    },
+    link: {
       type: DataTypes.TEXT,
       allowNull: true
     },
-    link: {
-      type: DataTypes.STRING(100),
-      allowNull: true
-    },
-    mail: {
-      type: DataTypes.STRING(50),
+    description: {
+      type: DataTypes.TEXT,
       allowNull: false
+    },
+    idDiner: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+      references: {
+        model: 'diner',
+        key: 'idDiner'
+      }
     }
   }, {
     timestamps:false,
-    tableName: 'Diner'
+    tableName: 'Event'
   });
 };

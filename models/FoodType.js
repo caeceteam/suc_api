@@ -9,24 +9,35 @@ module.exports = function(sequelize, DataTypes) {
       autoIncrement: true
     },
     code: {
-      type: DataTypes.STRING(15),
-      allowNull: true,
-      unique: true
+      type: DataTypes.STRING(10),
+      unique: true,
+      allowNull: false
     },
     name: {
-      type: DataTypes.STRING(45),
+      type: DataTypes.STRING(50),
       allowNull: false
     },
     description: {
-      type: DataTypes.STRING(45),
-      allowNull: true
+      type: DataTypes.TEXT,
+      allowNull: false
     },
     perishable: {
-      type: DataTypes.INTEGER(4),
-      allowNull: true
+      type: DataTypes.INTEGER(1),
+      allowNull: false,
+      defaultValue: '0'
+    },
+    celiac: {
+      type: DataTypes.INTEGER(1),
+      allowNull: false,
+      defaultValue: '0'
+    },
+    diabetic: {
+      type: DataTypes.INTEGER(1),
+      allowNull: false,
+      defaultValue: '0'
     }
   }, {
-    timestamps: false,
+    timestamps:false,
     tableName: 'FoodType'
   });
 };

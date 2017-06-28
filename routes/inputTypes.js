@@ -5,7 +5,7 @@ var app = express();
 var Sequelize = require('sequelize');
 var expressValidator = require('express-validator');
 
-app.use(expressValidator); 
+app.use(expressValidator);
 
 /* GET inputTypes listing. */
 router.get('/:idInputType?', function (req, res, next) {
@@ -15,12 +15,12 @@ router.get('/:idInputType?', function (req, res, next) {
         inputTypes.find({ where: { idInputType: idInputType } }).then(function (inputType, err) {
             if (err) {
                 // inputType not found 
-                return res.sendStatus(401);
+                return res.status(401).json({});
             }
 
             if (!inputType) {
                 // incorrect inputType
-                return res.sendStatus(404);
+                return res.status(404).json({});
             }
 
             res.json({
@@ -50,8 +50,7 @@ router.post('/', function (req, res, next) {
     inputTypes.create(postInputType).then(function (inputType) {
         res.status(201).json(inputType);
     }).catch(error => {
-        console.log(error);
-        res.status(error.errno);
+        res.status(500).json({ 'result': 'Error creando el inputType' });
     });;
 });
 
@@ -59,29 +58,35 @@ router.post('/', function (req, res, next) {
 router.put('/:idInputType', function (req, res, next) {
     var inputTypes = models.InputType;
     var idInputType = req.params.idInputType;
-    inputTypes.find({ where: {idInputType: idInputType} }).then(function (inputType) {
-        inputType.code = req.body.code;
-        inputType.name = req.body.name;
-        inputType.description = req.body.description;
-        inputType.save();
-        res.status(202).json(inputType);
+    inputTypes.find({ where: { idInputType: idInputType } }).then(function (inputType) {
+        if (inputType) {
+            inputType.udpdate({
+                code: req.body.code,
+                name: req.body.name,
+                description: req.body.description
+            }).then(function (updatedIT) {
+                res.status(202).json(inputType);
+            }).catch(error => {
+                res.status(500).json({ 'result': 'Error actualizando el inputType' });;
+            });
+        } else {
+            res.status(404).json({ 'result': 'No se encontro el inputType ' + idInputType + ' para hacer el update' });
+        }
+
     });
 });
 
 router.delete('/:idInputType', function (req, res, next) {
-var inputTypes = models.InputType;
-  var idInputType = req.params.idInputType;
-  inputTypes.destroy({where:{ idInputType: idInputType }}).then(function (result) {
-    var status
-    if(result == 1){
-      status = 200;
-    }else{
-      status = 204;
-    }
-    res.sendStatus(status);
-  }).catch(error => {
-        console.log(error);
-        res.status(error.errno);
+    var inputTypes = models.InputType;
+    var idInputType = req.params.idInputType;
+    inputTypes.destroy({ where: { idInputType: idInputType } }).then(function (result) {
+        if (result == 1) {
+            res.status(200).json({ 'result': "Se ha borrado el inputType " + idInputType });
+        } else {
+            res.status(204).json({ 'result': "No se ha podido borrar el inputType " + idInputType });
+        }
+    }).catch(error => {
+        res.status(500).json({ 'result': 'Error eliminando el inputType' });;
     });
 });
 

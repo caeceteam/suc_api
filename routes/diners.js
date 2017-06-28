@@ -13,12 +13,12 @@ router.get('/:idDiner?', function (req, res, next) {
         diners.find({ where: { idDiner: idDiner } }).then(function (diner, err) {
             if (err) {
                 // foodType not found 
-                return res.sendStatus(401);
+                return res.status(401).json({});
             }
 
             if (!diner) {
                 // incorrect foodType
-                return res.sendStatus(404);
+                return res.status(404).json({});
             }
 
             res.json({
@@ -35,10 +35,12 @@ router.get('/:idDiner?', function (req, res, next) {
 /* POST de foodTypes. */
 router.post('/', function (req, res, next) {
     var diners = models.Diner;
+    var usersDinerModel = models.UserDiner;
     var dinerRequest = req.body.diner;
     var userRequest = req.body.user;
     var idDiner;
     var postDiner = getDinerRequest(dinerRequest);
+    postDiner.state = 0; //Se crea inactivo.
     var postUser = usersRouter.getPostUser(userRequest);
     diners.create(postDiner).then(function (diner) {
         idDiner = diner.idDiner;
@@ -47,20 +49,21 @@ router.post('/', function (req, res, next) {
         var createdUser;
         users.create(postUser).then(function (user) {
             createdUser = user;
-            res.status(201).json({ diner: diner, user: createdUser });
+            usersDinerModel.create({'idDiner':idDiner,'idUser':createdUser.idUser,'active':0}).then(function (user) {
+                res.status(201).json({ diner: diner, user: createdUser });
+            });
         }).catch(error => {
-            console.log(error);
-            res.status(error.errno);
+            res.status(500).json({ 'result': 'Error creando el usuario' });
         });
     }).catch(error => {
-        console.log(error);
-        res.status(error.errno);
+        res.status(500).json({ 'result': 'Error creando el comedor' });
     });
 });
 
 var getDinerRequest = function (dinerRequest) {
     return {
         name: dinerRequest.name,
+        state: dinerRequest.state,
         street: dinerRequest.street,
         streetNumber: dinerRequest.streetNumber,
         floor: dinerRequest.floor,
@@ -72,7 +75,6 @@ var getDinerRequest = function (dinerRequest) {
         description: dinerRequest.description,
         link: dinerRequest.link,
         mail: dinerRequest.mail,
-        idCity: dinerRequest.idCity
     }
 }
 
@@ -80,55 +82,63 @@ router.put('/:idDiner', function (req, res, next) {
     var diners = models.Diner;
     var idDiner = req.params.idDiner;
     diners.find({ where: { idDiner: idDiner } }).then(function (diner) {
-        diner.name = req.body.name;
-        diner.street = req.body.street;
-        diner.streetNumber = req.body.streetNumber;
-        diner.floor = req.body.floor;
-        diner.door = req.body.door;
-        diner.latitude = req.body.latitude;
-        diner.longitude = req.body.longitude;
-        diner.zipCode = req.body.zipCode;
-        diner.phone = req.body.phone;
-        diner.description = req.body.description;
-        diner.link = req.body.link;
-        diner.mail = req.body.mail;
-        diner.idCity = req.body.idCity;
-
-        diner.save();
-        res.status(202).json(diner);
+        if (diner) {
+            diner.update({
+                name: req.body.name,
+                street: req.body.street,
+                streetNumber: req.body.streetNumber,
+                state: req.body.state,
+                floor: req.body.floor,
+                door: req.body.door,
+                latitude: req.body.latitude,
+                longitude: req.body.longitude,
+                zipCode: req.body.zipCode,
+                phone: req.body.phone,
+                description: req.body.description,
+                link: req.body.link,
+                mail: req.body.mail,
+            }).then(function (updatedDiner) {
+                res.status(202).json(updatedDiner);
+            }).catch(error => {
+                res.status(500).json({ 'result': 'No se puedo actualizar el comedor' });
+            });
+        } else {
+            res.status(404).json({ 'result': 'No se encontro el comedor ' + idDiner + ' para hacer el update' });
+        }
     });
 });
 
 router.delete('/:idDiner', function (req, res, next) {
     var diners = models.Diner;
-    var usersModel = models.User;
+    var usersDinerModel = models.UserDiner;
     var idDiner = req.params.idDiner;
     var users;
-    usersModel.findAll({ where: { idDiner: idDiner } }).then(function (usersResult) {
+    usersDinerModel.findAll({ where: { idDiner: idDiner } }).then(function (usersResult) {
         users = usersResult;
         if (users.length == 0) {
             diners.destroy({ where: { idDiner: idDiner } }).then(function (result) {
-                var status
                 if (result == 1) {
-                    status = 200;
+                    res.status(200).json({ 'result': "Se ha borrado el comedor " + idDiner });
                 } else {
-                    status = 204;
+                    res.status(204).json({ 'result': "No se ha podido borrar el comedor " + idDiner });
                 }
-                res.sendStatus(status);
             }).catch(error => {
-                console.log(error);
-                res.status(error.errno);
+                res.status(500).json({ 'result': 'Error eliminando el comedor ' + idDiner });
             });
         } else {
             diners.find({ where: { idDiner: idDiner } }).then(function (diner) {
-                diner.state = 0;
-                diner.save();
-                res.status(202).json(diner);
+                if (diner) {
+                    diner.state = 0;
+                    diner.save();
+                    res.status(202).json(diner);
+
+                } else {
+                    res.status(404).json({ 'result': 'No se encontro el comedor ' + idDiner });
+                }
             });
         }
     }).catch(error => {
-        console.log(error);
-        res.status(error.errno);
+        res.status(500).json({ 'result': 'Error eliminando el comedor ' + idDiner });
     });
 
 

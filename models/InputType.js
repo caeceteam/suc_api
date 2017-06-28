@@ -9,20 +9,20 @@ module.exports = function(sequelize, DataTypes) {
       autoIncrement: true
     },
     code: {
-      type: DataTypes.STRING(15),
-      allowNull: true,
-      unique: true
+      type: DataTypes.STRING(10),
+      unique: true,
+      allowNull: false
     },
     name: {
-      type: DataTypes.STRING(45),
+      type: DataTypes.STRING(50),
       allowNull: false
     },
     description: {
-      type: DataTypes.STRING(45),
+      type: DataTypes.TEXT,
       allowNull: true
     }
   }, {
-    timestamps: false,
+    timestamps:false,
     tableName: 'InputType'
   });
 };

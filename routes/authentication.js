@@ -16,22 +16,21 @@ router.post('/', function (req, res, next) {
   var hash = crypto.createHash('sha256');
   var User = models.User;
 
-  User.find({ where: Sequelize.or({ alias: userName }, { mail: userName }) }).then(function (user, err) {
+  User.find({ where: Sequelize.or({ idUser: userName },{ alias: userName }, { mail: userName }) }).then(function (user, err) {
     if (err) {
       // user not found 
-      return res.sendStatus(401);
+      return res.status(401).json({});
     }
 
     if (!user) {
       // incorrect username
-      return res.sendStatus(404);
+      return res.status(404).json({});
     }
 
     var hashedPass = hash.update(password).digest("base64");
-    console.log(hashedPass);
     if (user.pass !== hashedPass) {
       // incorrect password
-      return res.sendStatus(401);
+      return res.status(401).json({});
     }
     // User has authenticated OK
     var token = jwt.encode({
@@ -55,22 +54,22 @@ router.put('/', function (req, res, next) {
 
   var User = models.User;
 
-  User.find({ where: Sequelize.or({ alias: userName }, { mail: userName }) }).then(function (user, err) {
+  User.find({ where: Sequelize.or({ idUser: userName },{ alias: userName }, { mail: userName }) }).then(function (user, err) {
     if (err) {
       // user not found 
-      return res.sendStatus(401);
+      return res.status(401).json({});
     }
 
     if (!user) {
       // incorrect username
-      return res.sendStatus(404);
+      return res.status(404).json({});
     }
 
     var oldHashedPass = oldHash.update(oldPassword).digest("base64");
     var newHashedPass = newHash.update(newPassword).digest("base64");
     if (user.pass !== oldHashedPass) {
       // incorrect password
-      return res.sendStatus(401);
+      return res.status(401).json({});
     }
 
     user.pass = newHashedPass;
