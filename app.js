@@ -12,7 +12,7 @@ var authentication = require('./routes/authentication');
 var inputTypes = require('./routes/inputTypes');
 var foodTypes = require('./routes/foodTypes');
 var diners = require('./routes/diners');
-var inputs = require('./routes/input');
+var dinerInputs = require('./routes/dinerInputs');
 
 
 
@@ -86,7 +86,7 @@ app.use('/api/users', users);
 app.use('/api/inputTypes', inputTypes);
 app.use('/api/foodTypes', foodTypes);
 app.use('/api/diners', diners);
-app.use('/api/input', inputs);
+app.use('/api/dinerInputs', dinerInputs);
 
 
 
