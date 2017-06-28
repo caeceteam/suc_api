@@ -6,10 +6,10 @@ var Sequelize = require('sequelize');
 const crypto = require('crypto');
 /* GET users listing. */
 router.get('/:user?', function (req, res, next) {
-  var User = models.User;
+  var users = models.User;
   var searchParam = req.params.user;
   if (searchParam) {
-    User.find({ where: Sequelize.or({ idUser: searchParam }, { alias: searchParam }, { mail: searchParam }) }).then(function (user, err) {
+    users.find({ where: Sequelize.or({ idUser: searchParam }, { alias: searchParam }, { mail: searchParam }) }).then(function (user, err) {
       if (err) {
         // user not found 
         return res.status(401).json({ 'errorMessage': 'Ocurrio un error en la busqueda del usuario ' + searchParam });
@@ -25,11 +25,27 @@ router.get('/:user?', function (req, res, next) {
       });
     });
   } else {
-    User.findAll().then(function (users) {
-      res.json(users);
+    var page_size = req.query.pageSize ? req.query.pageSize : 10;
+    var page = req.query.page ? req.query.page : 0;
+    var total_elements;
+    users.count().then(function (quantity) {
+      total_elements = quantity;
+    });
+    users.findAll({ offset: page_size * page, limit: Math.ceil(page_size) }).then(function (usersCol) {
+      var total_pages = Math.ceil(total_elements / page_size);
+      var number_of_elements = usersCol.length;
+      res.json({
+        users: usersCol,
+        pagination: {
+          page: page,
+          size: page_size,
+          number_of_elements: number_of_elements,
+          total_pages: total_pages,
+          total_elements: total_elements
+        }
+      });
     });
   }
-
 });
 
 /* POST de user. */

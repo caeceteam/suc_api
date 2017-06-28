@@ -25,8 +25,25 @@ router.get('/:idFoodType?', function (req, res, next) {
             });
         });
     } else {
-        foodTypes.findAll().then(function (foodTypesCol) {
-            res.json(foodTypesCol);
+        var page_size = req.query.pageSize ? req.query.pageSize : 10;
+        var page = req.query.page ? req.query.page : 0;
+        var total_elements;
+        foodTypes.count().then(function(quantity){
+            total_elements = quantity;
+        });
+        foodTypes.findAll({ offset: page_size * page, limit: Math.ceil(page_size) }).then(function (foodTypesCol) {
+            var total_pages = Math.ceil(total_elements / page_size);
+            var number_of_elements = foodTypesCol.length;
+            res.json({
+                foodTypes: foodTypesCol,
+                pagination: {
+                    page: page,
+                    size: page_size,
+                    number_of_elements: number_of_elements,
+                    total_pages: total_pages,
+                    total_elements: total_elements
+                }
+            });
         });
     }
 });

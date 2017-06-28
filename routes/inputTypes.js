@@ -4,6 +4,7 @@ var models = require('../models/');
 var app = express();
 var Sequelize = require('sequelize');
 var expressValidator = require('express-validator');
+var paginator = require('../helpers/pagination');
 
 app.use(expressValidator);
 
@@ -28,8 +29,25 @@ router.get('/:idInputType?', function (req, res, next) {
             });
         });
     } else {
-        inputTypes.findAll().then(function (inputTypesCol) {
-            res.json(inputTypesCol);
+        var page_size = req.query.pageSize ? req.query.pageSize : 10;
+        var page = req.query.page ? req.query.page : 0;
+        var total_elements;
+        inputTypes.count().then(function(quantity){
+            total_elements = quantity;
+        });
+        inputTypes.findAll({ offset: page_size * page, limit: Math.ceil(page_size) }).then(function (inputTypesCol) {
+            var total_pages = Math.ceil(total_elements / page_size);
+            var number_of_elements = inputTypesCol.length;
+            res.json({
+                inputTypes: inputTypesCol,
+                pagination: {
+                    page: page,
+                    size: page_size,
+                    number_of_elements: number_of_elements,
+                    total_pages: total_pages,
+                    total_elements: total_elements
+                }
+            });
         });
     }
 });

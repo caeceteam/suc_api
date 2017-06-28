@@ -12,12 +12,12 @@ router.get('/:idDinerInput?', function (req, res, next) {
     if (idDinerInput) {
         dinerInputs.find({ where: { idDinerInput: idDinerInput } }).then(function (dinerInput, err) {
             if (err) {
-                // foodType not found 
+                // dinerInput not found 
                 return res.status(401).json({});
             }
 
             if (!dinerInput) {
-                // incorrect foodType
+                // incorrect dinerInput
                 return res.status(404).json({});
             }
 
@@ -26,8 +26,25 @@ router.get('/:idDinerInput?', function (req, res, next) {
             });
         });
     } else {
-        dinerInputs.findAll().then(function (dinerInputsCol) {
-            res.json(dinerInputsCol);
+        var page_size = req.query.pageSize ? req.query.pageSize : 10;
+        var page = req.query.page ? req.query.page : 0;
+        var total_elements;
+        dinerInputs.count().then(function(quantity){
+            total_elements = quantity;
+        });
+        dinerInputs.findAll({ offset: page_size * page, limit: Math.ceil(page_size) }).then(function (dinerInputsCol) {
+            var total_pages = Math.ceil(total_elements / page_size);
+            var number_of_elements = dinerInputsCol.length;
+            res.json({
+                dinerInputs: dinerInputsCol,
+                pagination: {
+                    page: page,
+                    size: page_size,
+                    number_of_elements: number_of_elements,
+                    total_pages: total_pages,
+                    total_elements: total_elements
+                }
+            });
         });
     }
 });

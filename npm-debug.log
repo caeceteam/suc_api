@@ -9,7 +9,7 @@
 6 silly lifecycle suc-api@0.0.0~prestart: no script for prestart, continuing
 7 info lifecycle suc-api@0.0.0~start: suc-api@0.0.0
 8 verbose lifecycle suc-api@0.0.0~start: unsafe-perm in lifecycle true
-9 verbose lifecycle suc-api@0.0.0~start: PATH: /usr/local/Cellar/nvm/0.33.2/versions/node/v6.9.1/lib/node_modules/npm/bin/node-gyp-bin:/Users/efridman/Proyectos/suc_api/node_modules/.bin:/usr/local/Cellar/nvm/0.33.2/versions/node/v6.9.1/bin:/usr/local/opt/nvm/versions/node/v6.9.1/bin:/Users/efridman/.sdkman/candidates/java/current/bin:/Users/efridman/.sdkman/candidates/groovy/current/bin:/Users/efridman/.sdkman/candidates/grails/current/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+9 verbose lifecycle suc-api@0.0.0~start: PATH: /usr/local/Cellar/nvm/0.33.2/versions/node/v6.9.1/lib/node_modules/npm/bin/node-gyp-bin:/Users/efridman/Proyectos/suc_api/node_modules/.bin:/usr/local/Cellar/nvm/0.33.2/versions/node/v6.9.1/bin:/usr/local/opt/nvm/versions/node/v6.9.1/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/efridman/.sdkman/candidates/java/current/bin:/Users/efridman/.sdkman/candidates/groovy/current/bin:/Users/efridman/.sdkman/candidates/grails/current/bin
 10 verbose lifecycle suc-api@0.0.0~start: CWD: /Users/efridman/Proyectos/suc_api
 11 silly lifecycle suc-api@0.0.0~start: Args: [ '-c', 'node ./bin/www' ]
 12 silly lifecycle suc-api@0.0.0~start: Returned: code: 1  signal: null
