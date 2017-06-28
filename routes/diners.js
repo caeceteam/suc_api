@@ -12,12 +12,12 @@ router.get('/:idDiner?', function (req, res, next) {
     if (idDiner) {
         diners.find({ where: { idDiner: idDiner } }).then(function (diner, err) {
             if (err) {
-                // foodType not found 
+                // diner not found 
                 return res.status(401).json({});
             }
 
             if (!diner) {
-                // incorrect foodType
+                // incorrect diner
                 return res.status(404).json({});
             }
 
@@ -26,13 +26,30 @@ router.get('/:idDiner?', function (req, res, next) {
             });
         });
     } else {
-        diners.findAll().then(function (dinersCol) {
-            res.json(dinersCol);
+        var page_size = req.query.pageSize ? req.query.pageSize : 10;
+        var page = req.query.page ? req.query.page : 0;
+        var total_elements;
+        diners.count().then(function(quantity){
+            total_elements = quantity;
+        });
+        diners.findAll({ offset: page_size * page, limit: Math.ceil(page_size) }).then(function (dinersCol) {
+            var total_pages = Math.ceil(total_elements / page_size);
+            var number_of_elements = dinersCol.length;
+            res.json({
+                diners: dinersCol,
+                pagination: {
+                    page: page,
+                    size: page_size,
+                    number_of_elements: number_of_elements,
+                    total_pages: total_pages,
+                    total_elements: total_elements
+                }
+            });
         });
     }
 });
 
-/* POST de foodTypes. */
+/* POST de diner. */
 router.post('/', function (req, res, next) {
     var diners = models.Diner;
     var usersDinerModel = models.UserDiner;
