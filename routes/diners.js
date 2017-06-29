@@ -10,6 +10,10 @@ var enumsRouter = require('./enumerations');
 router.get('/:idDiner?', function (req, res, next) {
     var idDiner = req.params.idDiner;
     var diners = models.Diner;
+    var users = models.User;
+    var usersDiners = models.UserDiner
+    diners.belongsToMany(users, { through: usersDiners, foreignKey: 'idDiner' })
+    users.belongsToMany(diners, { through: usersDiners, foreignKey: 'idUser' })
     if (idDiner) {
         diners.find({ where: { idDiner: idDiner } }).then(function (diner, err) {
             if (err) {
@@ -22,8 +26,15 @@ router.get('/:idDiner?', function (req, res, next) {
                 return res.status(404).json({});
             }
 
-            res.json({
-                diner: diner.toJSON()
+            var userFind = {};
+            diner.getUsers().then(function (usersFind) {
+                if (usersFind.length == 1) {
+                    userFind = usersFind[0];
+                }
+                res.json({
+                    diner: diner.toJSON(),
+                    user: userFind
+                });
             });
         });
     } else {
