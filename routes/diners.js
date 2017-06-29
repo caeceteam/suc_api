@@ -4,8 +4,9 @@ var models = require('../models/');
 var app = express();
 var Sequelize = require('sequelize');
 var usersRouter = require('./users');
+var enumsRouter = require('./enumerations');
 
-/* GET foodTypes listing. */
+/* GET diners listing. */
 router.get('/:idDiner?', function (req, res, next) {
     var idDiner = req.params.idDiner;
     var diners = models.Diner;
@@ -22,17 +23,22 @@ router.get('/:idDiner?', function (req, res, next) {
             }
 
             res.json({
-                diner: diner.toJSON(),
+                diner: diner.toJSON()
             });
         });
     } else {
         var page_size = req.query.pageSize ? req.query.pageSize : 10;
         var page = req.query.page ? req.query.page : 0;
         var total_elements;
-        diners.count().then(function(quantity){
+        diners.count().then(function (quantity) {
             total_elements = quantity;
         });
-        diners.findAll({ offset: page_size * page, limit: Math.ceil(page_size) }).then(function (dinersCol) {
+        var whereClosure = {};
+        if (req.query.state) {
+            var enumValue = enumsRouter.enumerations.dinerStates[req.query.state];
+            whereClosure = { state: enumValue }
+        }
+        diners.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure }).then(function (dinersCol) {
             var total_pages = Math.ceil(total_elements / page_size);
             var number_of_elements = dinersCol.length;
             res.json({
@@ -49,7 +55,7 @@ router.get('/:idDiner?', function (req, res, next) {
     }
 });
 
-/* POST de diner. */
+/* POST de diners. */
 router.post('/', function (req, res, next) {
     var diners = models.Diner;
     var usersDinerModel = models.UserDiner;
@@ -66,7 +72,7 @@ router.post('/', function (req, res, next) {
         var createdUser;
         users.create(postUser).then(function (user) {
             createdUser = user;
-            usersDinerModel.create({'idDiner':idDiner,'idUser':createdUser.idUser,'active':0}).then(function (user) {
+            usersDinerModel.create({ 'idDiner': idDiner, 'idUser': createdUser.idUser, 'active': 0 }).then(function (user) {
                 res.status(201).json({ diner: diner, user: createdUser });
             });
         }).catch(error => {
