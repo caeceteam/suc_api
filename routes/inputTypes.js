@@ -4,7 +4,6 @@ var models = require('../models/');
 var app = express();
 var Sequelize = require('sequelize');
 var expressValidator = require('express-validator');
-var paginator = require('../helpers/pagination');
 
 app.use(expressValidator);
 

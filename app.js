@@ -13,6 +13,8 @@ var inputTypes = require('./routes/inputTypes');
 var foodTypes = require('./routes/foodTypes');
 var diners = require('./routes/diners');
 var dinerInputs = require('./routes/dinerInputs');
+var enumerations = require('./routes/enumerations');
+
 
 
 
@@ -87,6 +89,8 @@ app.use('/api/inputTypes', inputTypes);
 app.use('/api/foodTypes', foodTypes);
 app.use('/api/diners', diners);
 app.use('/api/dinerInputs', dinerInputs);
+app.use('/api/enumerations', enumerations);
+
 
 
 
