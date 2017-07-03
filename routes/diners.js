@@ -3,6 +3,7 @@ var router = express.Router();
 var models = require('../models/');
 var app = express();
 var Sequelize = require('sequelize');
+var async = require('async');
 var usersRouter = require('./users');
 var enumsRouter = require('./enumerations');
 
@@ -38,33 +39,55 @@ router.get('/:idDiner?', function (req, res, next) {
             });
         });
     } else {
-        var page_size = req.query.pageSize ? req.query.pageSize : 10;
-        var page = req.query.page ? req.query.page : 0;
-        var total_elements;
-        diners.count().then(function (quantity) {
-            total_elements = quantity;
-        });
-        var whereClosure = {};
-        if (req.query.state) {
-            var enumValue = enumsRouter.enumerations.dinerStates[req.query.state];
-            whereClosure = { state: enumValue }
-        }
-        diners.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure }).then(function (dinersCol) {
-            var total_pages = Math.ceil(total_elements / page_size);
-            var number_of_elements = dinersCol.length;
-            res.json({
-                diners: dinersCol,
-                pagination: {
-                    page: page,
-                    size: page_size,
-                    number_of_elements: number_of_elements,
-                    total_pages: total_pages,
-                    total_elements: total_elements
-                }
-            });
-        });
+        getAllDiners(req, res, next);
     }
 });
+
+
+var getAllDiners = function (req, res, next) {
+    var diners = models.Diner;
+    var whereClosure = {};
+    if (req.query.state) {
+        var enumValue = enumsRouter.enumerations.dinerStates[req.query.state];
+        whereClosure = { state: enumValue }
+    }
+    var page_size = req.query.pageSize ? req.query.pageSize : 10;
+    var page = req.query.page ? req.query.page : 0;
+    var total_elements;
+    async.auto({
+        // this function will just be passed a callback
+        count: function (callback) {
+            diners.count().then(function (quantity) {
+                callback(null, quantity)
+            }).catch(error => {
+                callback(error, null);
+            });;
+        },
+        paginate: ['count', function (results, cb) {
+            diners.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure }).then(function (dinersCol) {
+                var total_pages = Math.ceil(results.count / page_size);
+                var number_of_elements = dinersCol.length;
+                var result = {
+                    diners: dinersCol,
+                    pagination: {
+                        page: page,
+                        size: page_size,
+                        number_of_elements: number_of_elements,
+                        total_pages: total_pages,
+                        total_elements: results.count
+                    }
+                };
+                cb(null, result)
+            }).catch(error => {
+                cb(error, null);
+            });
+        }]
+    }, function (err, results) {
+        res.json(results.paginate);
+    });
+
+
+}
 
 /* POST de diners. */
 router.post('/', function (req, res, next) {
