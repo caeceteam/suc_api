@@ -67,7 +67,7 @@ router.post('/', function (req, res, next) {
     inputTypes.create(postInputType).then(function (inputType) {
         res.status(201).json(inputType);
     }).catch(error => {
-        res.status(500).json({ 'result': 'Error creando el inputType' });
+        res.status(500).json({ 'result': error });
     });;
 });
 
