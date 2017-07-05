@@ -3,117 +3,46 @@ var router = express.Router();
 var models = require('../models/');
 var app = express();
 var Sequelize = require('sequelize');
-var async = require('async');
 var usersRouter = require('./users');
 var enumsRouter = require('./enumerations');
+var dinersService = require('../services/dinersService')
 
 /* GET diners listing. */
 router.get('/:idDiner?', function (req, res, next) {
     var idDiner = req.params.idDiner;
     var diners = models.Diner;
-    var users = models.User;
-    var usersDiners = models.UserDiner
-    diners.belongsToMany(users, { through: usersDiners, foreignKey: 'idDiner' })
-    users.belongsToMany(diners, { through: usersDiners, foreignKey: 'idUser' })
+
     if (idDiner) {
-        diners.find({ where: { idDiner: idDiner } }).then(function (diner, err) {
-            if (err) {
-                // diner not found 
-                return res.status(401).json({});
+        dinersService.getDiner(idDiner, function (err, result) {
+            if (!err) {
+                res.status(result.status).json(result.body);
+            } else {
+                res.status(err.status).json(err.body);
             }
-
-            if (!diner) {
-                // incorrect diner
-                return res.status(404).json({});
-            }
-
-            var userFind = {};
-            diner.getUsers().then(function (usersFind) {
-                if (usersFind.length == 1) {
-                    userFind = usersFind[0];
-                }
-                res.json({
-                    diner: diner.toJSON(),
-                    user: userFind
-                });
-            });
         });
     } else {
-        getAllDiners(req, res, next);
+        dinersService.getAllDiners(req, function (err, result) {
+            if (!err) {
+                res.status(result.status).json(result.body);
+            } else {
+                res.status(err.status).json(err.body);
+            }
+        });
     }
 });
 
-
-var getAllDiners = function (req, res, next) {
-    var diners = models.Diner;
-    var whereClosure = {};
-    if (req.query.state) {
-        var enumValue = enumsRouter.enumerations.dinerStates[req.query.state];
-        whereClosure = { state: enumValue }
-    }
-    var page_size = req.query.pageSize ? req.query.pageSize : 10;
-    var page = req.query.page ? req.query.page : 0;
-    var total_elements;
-    async.auto({
-        // this function will just be passed a callback
-        count: function (callback) {
-            diners.count().then(function (quantity) {
-                callback(null, quantity)
-            }).catch(error => {
-                callback(error, null);
-            });;
-        },
-        paginate: ['count', function (results, cb) {
-            diners.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure }).then(function (dinersCol) {
-                var total_pages = Math.ceil(results.count / page_size);
-                var number_of_elements = dinersCol.length;
-                var result = {
-                    diners: dinersCol,
-                    pagination: {
-                        page: page,
-                        size: page_size,
-                        number_of_elements: number_of_elements,
-                        total_pages: total_pages,
-                        total_elements: results.count
-                    }
-                };
-                cb(null, result)
-            }).catch(error => {
-                cb(error, null);
-            });
-        }]
-    }, function (err, results) {
-        res.json(results.paginate);
-    });
-
-
-}
-
 /* POST de diners. */
 router.post('/', function (req, res, next) {
-    var diners = models.Diner;
-    var usersDinerModel = models.UserDiner;
+    var idDiner;
     var dinerRequest = req.body.diner;
     var userRequest = req.body.user;
-    var idDiner;
-    var postDiner = getDinerRequest(dinerRequest);
-    postDiner.state = 0; //Se crea inactivo.
-    var postUser = usersRouter.getPostUser(userRequest);
-    diners.create(postDiner).then(function (diner) {
-        idDiner = diner.idDiner;
-        postUser.idDiner = idDiner;
-        var users = models.User;
-        var createdUser;
-        users.create(postUser).then(function (user) {
-            createdUser = user;
-            usersDinerModel.create({ 'idDiner': idDiner, 'idUser': createdUser.idUser, 'active': 0 }).then(function (user) {
-                res.status(201).json({ diner: diner, user: createdUser });
-            });
-        }).catch(error => {
-            res.status(500).json({ 'result': 'Error creando el usuario' });
-        });
-    }).catch(error => {
-        res.status(500).json({ 'result': 'Error creando el comedor' });
+
+    dinersService.createDiner(dinerRequest, userRequest, function (err, result) {
+        if (!err) {
+            res.status(result.status).json(result.body);
+        } else {
+            res.status(err.status).json(err.body);
+        }
     });
 });
 
@@ -138,29 +67,12 @@ var getDinerRequest = function (dinerRequest) {
 router.put('/:idDiner', function (req, res, next) {
     var diners = models.Diner;
     var idDiner = req.params.idDiner;
-    diners.find({ where: { idDiner: idDiner } }).then(function (diner) {
-        if (diner) {
-            diner.update({
-                name: req.body.name,
-                street: req.body.street,
-                streetNumber: req.body.streetNumber,
-                state: req.body.state,
-                floor: req.body.floor,
-                door: req.body.door,
-                latitude: req.body.latitude,
-                longitude: req.body.longitude,
-                zipCode: req.body.zipCode,
-                phone: req.body.phone,
-                description: req.body.description,
-                link: req.body.link,
-                mail: req.body.mail,
-            }).then(function (updatedDiner) {
-                res.status(202).json(updatedDiner);
-            }).catch(error => {
-                res.status(500).json({ 'result': 'No se puedo actualizar el comedor' });
-            });
+    var dinerRequest = dinersService.getDinerRequest(req.body);
+    dinersService.updateDiner(idDiner, dinerRequest, function (err, result) {
+        if (!err) {
+            res.status(result.status).json(result.body);
         } else {
-            res.status(404).json({ 'result': 'No se encontro el comedor ' + idDiner + ' para hacer el update' });
+            res.status(err.status).json(err.body);
         }
     });
 });
