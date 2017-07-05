@@ -108,14 +108,15 @@ router.put('/:searchParam', function (req, res, next) {
 
 router.delete('/:user', function (req, res, next) {
   var User = models.User;
-  var userName = req.params.user;
+  var searchParam = req.params.user;
   User.destroy({ where: Sequelize.or({ idUser: searchParam }, { alias: searchParam }, { mail: searchParam }) }).then(function (result) {
     if (result == 1) {
-      res.status(200).json({ 'result': "Se ha borrado el usuario " + userName });
+      res.status(200).json({ 'result': "Se ha borrado el usuario " + searchParam });
     } else {
-      res.status(204).json({ 'result': "No se ha podido borrar el usuario " + userName });
+      res.status(204).json({ 'result': "No se ha podido borrar el usuario " + searchParam });
     }
   }).catch(error => {
+    console.log(error);
     res.status(500).json({ 'result': 'Error eliminando el user' });;
   });
 });

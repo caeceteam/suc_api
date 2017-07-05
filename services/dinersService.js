@@ -1,19 +1,18 @@
 var models = require('../models/');
 var usersService = require('./usersService');
 var async = require('async');
+var dinersModel = models.Diner;
+var usersModel = models.User;
+var usersDinersModel = models.UserDiner;
+dinersModel.belongsToMany(usersModel, { through: usersDinersModel, foreignKey: 'idDiner' });
+usersModel.belongsToMany(dinersModel, { through: usersDinersModel, foreignKey: 'idUser' });
 
 var getDiner = function (idDiner, responseCB) {
-    var diners = models.Diner;
     var dinerResponse = { status: 200, json: {} };
-    var users = models.User;
-    var usersDiners = models.UserDiner
-    diners.belongsToMany(users, { through: usersDiners, foreignKey: 'idDiner' });
-    users.belongsToMany(diners, { through: usersDiners, foreignKey: 'idUser' });
-
     async.auto({
         // this function will just be passed a callback
         findDiner: function (callback) {
-            diners.find({ where: { idDiner: idDiner } }).then(function (diner, err) {
+            dinersModel.find({ where: { idDiner: idDiner } }).then(function (diner, err) {
                 if (err) {
                     // diner not found 
                     return callback({ 'body': {}, 'status': 401 }, null);
@@ -23,21 +22,20 @@ var getDiner = function (idDiner, responseCB) {
                     // incorrect diner
                     return callback({ 'body': {}, 'status': 404 }, null);
                 }
-                console.log("encontro diner");
                 callback(null, { 'body': diner, 'status': 200 });
             }).catch(error => {
                 callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el diner " + idDiner }, 'status': 500 }, null);
             });
         },
         endedDinerResponse: ['findDiner', function (results, cb) {
-            var userFound = {};
-            results.findDiner.body.getUsers().then(function (usersFound) {
-                if (usersFound.length == 1) {
-                    userFound = usersFound[0];
+            var user = {};
+            results.findDiner.body.getUsers().then(function (users) {
+                if (users.length == 1) {
+                    user = users[0];
                 }
                 dinerResponse = {
-                    diner: results.findDiner.body.toJSON(),
-                    user: userFound
+                    diner: results.findDiner.body,
+                    user: user
                 };
 
                 cb(null, { 'body': dinerResponse, 'status': 200 })
@@ -55,8 +53,6 @@ var getDiner = function (idDiner, responseCB) {
 }
 
 var getAllDiners = function (req, responseCB) {
-    var diners = models.Diner;
-
     var whereClosure = {};
     if (req.query.state) {
         var enumValue = enumsRouter.enumerations.dinerStates[req.query.state];
@@ -69,16 +65,16 @@ var getAllDiners = function (req, responseCB) {
 
     async.auto({
         // this function will just be passed a callback
-        count: function (callback) {
-            diners.count().then(function (quantity) {
-                callback(null, quantity)
+        dinersCount: function (callback) {
+            dinersModel.count().then(function (dinersQty) {
+                callback(null, dinersQty)
             }).catch(error => {
                 callback(error, null);
             });
         },
-        paginate: ['count', function (results, cb) {
-            diners.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure }).then(function (dinersCol) {
-                var total_pages = Math.ceil(results.count / page_size);
+        paginate: ['dinersCount', function (results, cb) {
+            dinersModel.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure }).then(function (dinersCol) {
+                var total_pages = Math.ceil(results.dinersCount / page_size);
                 var number_of_elements = dinersCol.length;
                 var result = {
                     diners: dinersCol,
@@ -105,23 +101,15 @@ var getAllDiners = function (req, responseCB) {
 }
 
 var createDiner = function (dinerRequest, userRequest, responseCB) {
-    var diners = models.Diner;
-    var users = models.User;
-    var usersDiners = models.UserDiner;
-
-
-    diners.belongsToMany(users, { through: usersDiners, foreignKey: 'idDiner' });
-    users.belongsToMany(diners, { through: usersDiners, foreignKey: 'idUser' });
-
     async.auto({
         // this function will just be passed a callback
         createDiner: function (callback) {
             var postDiner = getDinerRequest(dinerRequest);
             postDiner.state = 0; //Se crea inactivo.
-            diners.create(postDiner).then(function (diner) {
+            dinersModel.create(postDiner).then(function (diner) {
                 callback(null, { 'body': diner, 'status': 201 });
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error creando el diner" }, 'status': 500 }, null);
+                callback({ 'body': { 'result': "Ha ocurrido un error creando el diner" }, 'status': 500 }, null);
             });
         },
         createUser: ['createDiner', function (results, cb) {
@@ -129,11 +117,12 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
             var postUser = usersService.getUserRequest(userRequest);
             var diner = results.createDiner.body;
             postUser.idDiner = diner.idDiner;
-            users.create(postUser).then(function (user) {
+            usersModel.create(postUser).then(function (user) {
                 diner.addUser(user);
                 var result = { diner: diner, user: user };
                 cb(null, { 'body': result, 'status': 201 })
             }).catch(error => {
+                diner.destroy(); //Un falso rollback hasta que podamos implementar algo mejor
                 cb({ 'body': { 'result': "Ha ocurrido un error creando el usuario" }, 'status': 500 }, null);
             });
         }]
@@ -147,11 +136,10 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
 }
 
 var updateDiner = function (idDiner, dinerRequest, responseCB) {
-    var diners = models.Diner;
     async.auto({
         // this function will just be passed a callback
         updateDiner: function (callback) {
-            diners.find({ where: { idDiner: idDiner } }).then(function (diner) {
+            dinersModel.find({ where: { idDiner: idDiner } }).then(function (diner) {
                 if (diner) {
                     diner.update(dinerRequest).then(function (updatedDiner) {
                         callback(null, { 'body': updatedDiner, 'status': 202 });
@@ -173,6 +161,82 @@ var updateDiner = function (idDiner, dinerRequest, responseCB) {
 
 }
 
+var deleteDiner = function (idDiner, responseCB) {
+    async.auto({
+        // this function will just be passed a callback
+        findDiner: function (callback) {
+            var diner;
+            getDiner(idDiner, function (err, result) {
+                diner = result.body.diner;
+                callback(null, diner);
+            });
+        },
+        countUsers: ['findDiner', function (results, callback) {
+            var diner = results.findDiner;
+            try {
+                diner.getUsers().then(function (users) {
+                    callback(null, { 'body': users.length, 'status': 200 });
+                });
+            } catch (error) {
+                callback(error, null)
+            };
+        }],
+        processDiner: ['countUsers', function (results, cb) {
+            var usersLength = results.countUsers.body;
+            console.log(usersLength);
+            if (usersLength == 0) {
+                deleteDinerById(idDiner, function (result) {
+                    cb(null, { 'body': result.result, 'status': result.status });
+                });
+            } else {
+                setDinerByIdAsInactive(idDiner, function (result) {
+                    cb(null, { 'body': result.result, 'status': result.status });
+                });
+            }
+        }]
+    }, function (err, results) {
+        if (!err) {
+            responseCB(null, results.processDiner);
+        } else {
+            responseCB(err, null);
+        }
+    });
+}
+
+var deleteDinerById = function (idDiner, callback) {
+    var dinerResponse = {};
+    dinersModel.destroy({ where: { idDiner: idDiner } }).then(function (result) {
+        if (result == 1) {
+            dinerResponse.status = 200;
+            dinerResponse.result = "Se ha borrado el comedor " + idDiner;
+        } else {
+            dinerResponse.status = 204;
+            dinerResponse.result = "No se ha podido borrar el comedor " + idDiner;
+        }
+        callback(dinerResponse);
+    }).catch(error => {
+        dinerResponse.status = 500;
+        dinerResponse.result = "Error eliminando el comedor " + idDiner;
+        callback(dinerResponse);
+    });
+}
+
+var setDinerByIdAsInactive = function (idDiner, callback) {
+    var dinerResponse = {};
+    dinersModel.find({ where: { idDiner: idDiner } }).then(function (diner) {
+        if (diner) {
+            diner.state = 0;
+            diner.save();
+            dinerResponse.status = 202;
+            dinerResponse.result = diner;
+        } else {
+            dinerResponse.status = 404;
+            dinerResponse.result = "No se encontro el comedor " + idDiner;
+        }
+        callback(dinerResponse);
+    });
+}
+
 var getDinerRequest = function (dinerRequest) {
     return {
         name: dinerRequest.name,
@@ -190,40 +254,6 @@ var getDinerRequest = function (dinerRequest) {
         mail: dinerRequest.mail,
     }
 }
-
-var deleteDiner = function(idDiner,responseCB){
-    var diners = models.Diner;
-    var usersDinerModel = models.UserDiner;
-    var users;
-    usersDinerModel.findAll({ where: { idDiner: idDiner } }).then(function (usersResult) {
-        users = usersResult;
-        if (users.length == 0) {
-            diners.destroy({ where: { idDiner: idDiner } }).then(function (result) {
-                if (result == 1) {
-                    res.status(200).json({ 'result': "Se ha borrado el comedor " + idDiner });
-                } else {
-                    res.status(204).json({ 'result': "No se ha podido borrar el comedor " + idDiner });
-                }
-            }).catch(error => {
-                res.status(500).json({ 'result': 'Error eliminando el comedor ' + idDiner });
-            });
-        } else {
-            diners.find({ where: { idDiner: idDiner } }).then(function (diner) {
-                if (diner) {
-                    diner.state = 0;
-                    diner.save();
-                    res.status(202).json(diner);
-
-                } else {
-                    res.status(404).json({ 'result': 'No se encontro el comedor ' + idDiner });
-                }
-            });
-        }
-    }).catch(error => {
-        res.status(500).json({ 'result': 'Error eliminando el comedor ' + idDiner });
-    });
-}
-
 module.exports = {
     getAllDiners: getAllDiners,
     getDiner: getDiner,

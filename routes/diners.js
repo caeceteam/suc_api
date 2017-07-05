@@ -78,39 +78,14 @@ router.put('/:idDiner', function (req, res, next) {
 });
 
 router.delete('/:idDiner', function (req, res, next) {
-    var diners = models.Diner;
-    var usersDinerModel = models.UserDiner;
     var idDiner = req.params.idDiner;
-    var users;
-    usersDinerModel.findAll({ where: { idDiner: idDiner } }).then(function (usersResult) {
-        users = usersResult;
-        if (users.length == 0) {
-            diners.destroy({ where: { idDiner: idDiner } }).then(function (result) {
-                if (result == 1) {
-                    res.status(200).json({ 'result': "Se ha borrado el comedor " + idDiner });
-                } else {
-                    res.status(204).json({ 'result': "No se ha podido borrar el comedor " + idDiner });
-                }
-            }).catch(error => {
-                res.status(500).json({ 'result': 'Error eliminando el comedor ' + idDiner });
-            });
+    dinersService.deleteDiner(idDiner, function (err, result) {
+        if (!err) {
+            res.status(result.status).json(result.body);
         } else {
-            diners.find({ where: { idDiner: idDiner } }).then(function (diner) {
-                if (diner) {
-                    diner.state = 0;
-                    diner.save();
-                    res.status(202).json(diner);
-
-                } else {
-                    res.status(404).json({ 'result': 'No se encontro el comedor ' + idDiner });
-                }
-            });
+            res.status(err.status).json(err.body);
         }
-    }).catch(error => {
-        res.status(500).json({ 'result': 'Error eliminando el comedor ' + idDiner });
     });
-
-
 });
 
 module.exports = router;
