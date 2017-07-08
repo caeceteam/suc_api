@@ -1,17 +1,11 @@
 var express = require('express');
 var router = express.Router();
-var models = require('../models/');
 var app = express();
-var Sequelize = require('sequelize');
-var usersRouter = require('./users');
-var enumsRouter = require('./enumerations');
 var dinersService = require('../services/dinersService')
 
 /* GET diners listing. */
 router.get('/:idDiner?', function (req, res, next) {
     var idDiner = req.params.idDiner;
-    var diners = models.Diner;
-
     if (idDiner) {
         dinersService.getDiner(idDiner, function (err, result) {
             if (!err) {
@@ -46,29 +40,9 @@ router.post('/', function (req, res, next) {
     });
 });
 
-var getDinerRequest = function (dinerRequest) {
-    return {
-        name: dinerRequest.name,
-        state: dinerRequest.state,
-        street: dinerRequest.street,
-        streetNumber: dinerRequest.streetNumber,
-        floor: dinerRequest.floor,
-        door: dinerRequest.door,
-        latitude: dinerRequest.latitude,
-        longitude: dinerRequest.longitude,
-        zipCode: dinerRequest.zipCode,
-        phone: dinerRequest.phone,
-        description: dinerRequest.description,
-        link: dinerRequest.link,
-        mail: dinerRequest.mail,
-    }
-}
-
 router.put('/:idDiner', function (req, res, next) {
-    var diners = models.Diner;
     var idDiner = req.params.idDiner;
-    var dinerRequest = dinersService.getDinerRequest(req.body);
-    dinersService.updateDiner(idDiner, dinerRequest, function (err, result) {
+    dinersService.updateDiner(idDiner, req.body, function (err, result) {
         if (!err) {
             res.status(result.status).json(result.body);
         } else {

@@ -83,12 +83,12 @@ var getAllDiners = function (req, responseCB) {
                         size: page_size,
                         number_of_elements: number_of_elements,
                         total_pages: total_pages,
-                        total_elements: results.count
+                        total_elements: results.dinersCount
                     }
                 };
                 cb(null, { 'body': result, 'status': 200 })
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo lo diners" }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los diners" }, 'status': 500 }, null);
             });
         }]
     }, function (err, results) {
@@ -114,7 +114,7 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
         },
         createUser: ['createDiner', function (results, cb) {
             var createdUser;
-            var postUser = usersService.getUserRequest(userRequest);
+            var postUser = usersService.getUserRequest(userRequest,true);
             var diner = results.createDiner.body;
             postUser.idDiner = diner.idDiner;
             usersModel.create(postUser).then(function (user) {
@@ -141,7 +141,7 @@ var updateDiner = function (idDiner, dinerRequest, responseCB) {
         updateDiner: function (callback) {
             dinersModel.find({ where: { idDiner: idDiner } }).then(function (diner) {
                 if (diner) {
-                    diner.update(dinerRequest).then(function (updatedDiner) {
+                    diner.update(getDinerRequest(dinerRequest)).then(function (updatedDiner) {
                         callback(null, { 'body': updatedDiner, 'status': 202 });
                     }).catch(error => {
                         callback({ 'body': { 'result': 'No se puedo actualizar el comedor' }, 'status': 500 }, null);
