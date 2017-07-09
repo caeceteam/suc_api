@@ -1,5 +1,4 @@
 var models = require('../models/');
-var sequelize = require('sequelize');
 var async = require('async');
 var foodTypesModel = models.FoodType;
 
