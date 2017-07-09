@@ -125,18 +125,6 @@ var updateDinerInput = function (idDinerInput, dinerInputRequest, responseCB) {
 
 }
 
-var getDinerInputRequest = function(request){
-    return {
-        idDiner: request.idDiner,
-        idInputType: request.idInputType,
-        name: request.name,
-        genderType: request.genderType,
-        size: request.size,
-        quantity: request.quantity,
-        description: request.description
-    };
-}
-
 var deleteDinerInput = function (idDinerInput, responseCB) {
     async.auto({
         // this function will just be passed a callback
@@ -180,6 +168,18 @@ var deleteDinerInput = function (idDinerInput, responseCB) {
             responseCB(err, null);
         }
     });
+}
+
+var getDinerInputRequest = function(request){
+    return {
+        idDiner: request.idDiner,
+        idInputType: request.idInputType,
+        name: request.name,
+        genderType: request.genderType,
+        size: request.size,
+        quantity: request.quantity,
+        description: request.description
+    };
 }
 
 module.exports = {
