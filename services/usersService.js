@@ -79,7 +79,6 @@ var createUser = function (userRequest, responseCB) {
     async.auto({
         // this function will just be passed a callback
         createUser: function (cb) {
-            var createdUser;
             var postUser = getUserRequest(userRequest, true);
             usersModel.create(postUser).then(function (user) {
                 cb(null, { 'body': user, 'status': 201 });
