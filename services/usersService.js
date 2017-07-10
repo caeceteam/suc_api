@@ -182,8 +182,15 @@ var getUserRequest = function (request, shouldCreatePassword) {
         surname: request.surname,
         alias: request.alias,
         mail: request.mail,
-        phone: request.phone, idDiner: request.idDiner, role: request.role,
-        docNumber: request.docNumber, bornDate: request.bornDate, state: request.state
+        phone: request.phone,
+        street: request.street,
+        streetNumber: request.streetNumber,
+        floor: request.floor,
+        door: request.door,
+        role: request.role,
+        docNumber: request.docNumber,
+        bornDate: request.bornDate,
+        state: request.state
     };
 
     if (shouldCreatePassword == true) {

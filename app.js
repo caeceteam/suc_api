@@ -14,7 +14,7 @@ var foodTypes = require('./routes/foodTypes');
 var diners = require('./routes/diners');
 var dinerInputs = require('./routes/dinerInputs');
 var dinerPhotos = require('./routes/dinerPhotos');
-
+var assistants = require('./routes/assistants');
 var enumerations = require('./routes/enumerations');
 
 
@@ -93,6 +93,7 @@ app.use('/api/diners', diners);
 app.use('/api/dinerInputs', dinerInputs);
 app.use('/api/enumerations', enumerations);
 app.use('/api/dinerPhotos', dinerPhotos);
+app.use('/api/assistants', assistants);
 
 
 
