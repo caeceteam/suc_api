@@ -32,6 +32,14 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.CHAR(5),
       allowNull: true
     },
+    latitude: {
+      type: DataTypes.FLOAT,
+      allowNull: true
+    },
+    longitude: {
+      type: DataTypes.FLOAT,
+      allowNull: true
+    },
     phone: {
       type: DataTypes.STRING(20),
       allowNull: true
