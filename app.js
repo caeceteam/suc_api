@@ -16,8 +16,7 @@ var dinerInputs = require('./routes/dinerInputs');
 var dinerPhotos = require('./routes/dinerPhotos');
 var assistants = require('./routes/assistants');
 var enumerations = require('./routes/enumerations');
-
-
+var events = require('./routes/events');
 
 
 var app = express();
@@ -94,9 +93,7 @@ app.use('/api/dinerInputs', dinerInputs);
 app.use('/api/enumerations', enumerations);
 app.use('/api/dinerPhotos', dinerPhotos);
 app.use('/api/assistants', assistants);
-
-
-
+app.use('/api/events', events);
 
 
 // catch 404 and forward to error handler
