@@ -60,6 +60,7 @@ var createDinerPhoto = function (dinerPhotoRequest, responseCB) {
             dinerPhotosModel.create(postDinerPhoto).then(function (dinerPhoto) {
                 cb(null, { 'body': dinerPhoto, 'status': 201 });
             }).catch(error => {
+                console.log(error);
                 cb({ 'body': { 'result': "Ha ocurrido un error creando el dinerPhoto" }, 'status': 500 }, null);
             });
         }

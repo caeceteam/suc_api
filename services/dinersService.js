@@ -1,11 +1,14 @@
 var models = require('../models/');
 var usersService = require('./usersService');
+var dinerPhotosService = require('./dinerPhotosService');
 var async = require('async');
 var dinersModel = models.Diner;
 var usersModel = models.User;
 var usersDinersModel = models.UserDiner;
+var dinersPhotoModel = models.DinerPhoto;
 dinersModel.belongsToMany(usersModel, { through: usersDinersModel, foreignKey: 'idDiner' });
 usersModel.belongsToMany(dinersModel, { through: usersDinersModel, foreignKey: 'idUser' });
+dinersModel.hasMany(dinersPhotoModel, { as: 'photos', foreignKey: 'idDiner' });
 
 var getDiner = function (idDiner, responseCB) {
     var dinerResponse = { status: 200, json: {} };
@@ -27,21 +30,33 @@ var getDiner = function (idDiner, responseCB) {
                 callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el diner " + idDiner }, 'status': 500 }, null);
             });
         },
-        endedDinerResponse: ['findDiner', function (results, cb) {
-            var user = {};
-            results.findDiner.body.getUsers().then(function (users) {
-                if (users.length == 1) {
-                    user = users[0];
-                }
-                dinerResponse = {
-                    diner: results.findDiner.body,
-                    user: user
-                };
-
-                cb(null, { 'body': dinerResponse, 'status': 200 })
+        findPhotos: ['findDiner', function (results, cb) {
+            results.findDiner.body.getPhotos().then(function (photos) {
+                cb(null, { 'body': photos });
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo el user para el diner " + idDiner }, 'status': 500 }, null);
-            });
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo las photos para el diner " + idDiner }, 'status': 500 }, null);
+            });;
+        }],
+        findUsers: ['findDiner', function (results, cb) {
+            results.findDiner.body.getUsers().then(function (users) {
+                cb(null, { 'body': users });
+            }).catch(error => {
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los user para el diner " + idDiner }, 'status': 500 }, null);
+            });;
+        }],
+        endedDinerResponse: ['findPhotos', 'findUsers', function (results, cb) {
+            var user = {};
+            var users = results.findUsers.body;
+            var photos = results.findPhotos.body;
+            if (users.length == 1) {
+                user = users[0];
+            }
+            dinerResponse = {
+                diner: results.findDiner.body,
+                user: user,
+                photos: photos
+            };
+            cb(null, { 'body': dinerResponse, 'status': 200 })
         }]
     }, function (err, results) {
         if (!err) {
@@ -112,9 +127,27 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
                 callback({ 'body': { 'result': "Ha ocurrido un error creando el diner" }, 'status': 500 }, null);
             });
         },
+        createPhoto: ['createDiner', function (results, cb) {
+            var postDiner = getDinerRequest(dinerRequest);
+            if (postDiner.photo && postDiner.photo.length > 0) {
+                var dinerPhotoRequest = {
+                    idDiner: results.createDiner.body.idDiner,
+                    url: postDiner.photo
+                }
+                dinerPhotosService.createDinerPhoto(dinerPhotoRequest, function (err, result) {
+                    if (!err) {
+                        cb(null, { 'photo': result, 'status': 201 })
+                    } else {
+                        cb({ 'body': { 'result': "Ha ocurrido un error creando la photo" }, 'status': 500 }, null);
+                    }
+                });
+            } else {
+                cb(null, { 'photo': {}, 'status': 204 })
+            }
+        }],
         createUser: ['createDiner', function (results, cb) {
             var createdUser;
-            var postUser = usersService.getUserRequest(userRequest,true);
+            var postUser = usersService.getUserRequest(userRequest, true);
             var diner = results.createDiner.body;
             postUser.idDiner = diner.idDiner;
             usersModel.create(postUser).then(function (user) {
@@ -125,10 +158,27 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
                 diner.destroy(); //Un falso rollback hasta que podamos implementar algo mejor
                 cb({ 'body': { 'result': "Ha ocurrido un error creando el usuario" }, 'status': 500 }, null);
             });
-        }]
+        }],
+        endDinerCreation: ['createPhoto', 'createUser', function (results, cb) {
+            try {
+                var dinerJson = results.createUser.body.diner.toJSON();
+                var user = results.createUser.body.user;
+                var photo = results.createPhoto.photo.body;
+
+                dinerJson.photo = photo;
+                var dinerResponse = {
+                    diner: dinerJson,
+                    user: user
+                };
+                cb(null, { 'body': dinerResponse, 'status': 201 })
+            } catch (ex) {
+                console.log("Algo se rompio en la creacion del comedor stack:" + ex);
+            }
+
+        }],
     }, function (err, results) {
         if (!err) {
-            responseCB(null, results.createUser);
+            responseCB(null, results.endDinerCreation);
         } else {
             responseCB(err, null);
         }
@@ -252,6 +302,7 @@ var getDinerRequest = function (dinerRequest) {
         description: dinerRequest.description,
         link: dinerRequest.link,
         mail: dinerRequest.mail,
+        photo: dinerRequest.photo
     }
 }
 module.exports = {
