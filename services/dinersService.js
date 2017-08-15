@@ -129,17 +129,21 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
         },
         createPhoto: ['createDiner', function (results, cb) {
             var postDiner = getDinerRequest(dinerRequest);
-            var dinerPhotoRequest = {
-                idDiner: results.createDiner.body.idDiner,
-                url: postDiner.photo
-            }
-            dinerPhotosService.createDinerPhoto(dinerPhotoRequest, function (err, result) {
-                if (!err) {
-                    cb(null, { 'photo': result, 'status': 201 })
-                } else {
-                    cb({ 'body': { 'result': "Ha ocurrido un error creando la photo" }, 'status': 500 }, null);
+            if (postDiner.photo && postDiner.photo.length > 0) {
+                var dinerPhotoRequest = {
+                    idDiner: results.createDiner.body.idDiner,
+                    url: postDiner.photo
                 }
-            });
+                dinerPhotosService.createDinerPhoto(dinerPhotoRequest, function (err, result) {
+                    if (!err) {
+                        cb(null, { 'photo': result, 'status': 201 })
+                    } else {
+                        cb({ 'body': { 'result': "Ha ocurrido un error creando la photo" }, 'status': 500 }, null);
+                    }
+                });
+            } else {
+                cb(null, { 'photo': {}, 'status': 204 })
+            }
         }],
         createUser: ['createDiner', function (results, cb) {
             var createdUser;
@@ -160,7 +164,7 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
                 var dinerJson = results.createUser.body.diner.toJSON();
                 var user = results.createUser.body.user;
                 var photo = results.createPhoto.photo.body;
-                
+
                 dinerJson.photo = photo;
                 var dinerResponse = {
                     diner: dinerJson,
