@@ -19,7 +19,7 @@ var getDinerPhoto = function (idDiner, idPhoto, responseCB) {
                 }
                 callback(null, { 'body': dinerPhoto, 'status': 200 });
             }).catch(error => {
-                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el dinerPhoto diner " + idDiner + " photo " + idPhoto }, 'status': 500 }, null);
+                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el dinerPhoto diner " + idDiner + " photo " + idPhoto, 'fields': error.fields }, 'status': 500 }, null);
             });
         }
     }, function (err, results) {
@@ -60,8 +60,7 @@ var createDinerPhoto = function (dinerPhotoRequest, responseCB) {
             dinerPhotosModel.create(postDinerPhoto).then(function (dinerPhoto) {
                 cb(null, { 'body': dinerPhoto, 'status': 201 });
             }).catch(error => {
-                console.log(error);
-                cb({ 'body': { 'result': "Ha ocurrido un error creando el dinerPhoto" }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error creando el dinerPhoto", 'fields': error.fields }, 'status': 500 }, null);
             });
         }
     }, function (err, results) {
@@ -85,7 +84,7 @@ var updateDinerPhoto = function (dinerPhotoRequest, responseCB) {
                         dinerPhoto.update(dinerPhotoPUT).then(function (updatedDinerPhoto) {
                             callback(null, { 'body': updatedDinerPhoto, 'status': 202 });
                         }).catch(error => {
-                            callback({ 'body': { 'result': 'No se puedo actualizar el dinerPhoto' }, 'status': 500 }, null);
+                            callback({ 'body': { 'result': 'No se puedo actualizar el dinerPhoto', 'fields': error.fields }, 'status': 500 }, null);
                         });
                     } else {
                         callback({ 'body': { 'result': 'No se puedo actualizar el dinerPhoto' }, 'status': 404 }, null);
@@ -131,6 +130,7 @@ var deleteDinerPhoto = function (idDiner, idPhoto, responseCB) {
                     cb(dinerPhotoResponse);
                 }).catch(error => {
                     dinerPhotoResponse.status = 500;
+                    dinerPhotoResponse.fields = error.fields                                        
                     dinerPhotoResponse.result = "Error eliminando el dinerPhoto diner " + idDiner + " photo " + idPhoto;
                     cb(dinerPhotoResponse);
                 });

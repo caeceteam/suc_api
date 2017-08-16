@@ -24,7 +24,7 @@ var getAssistant = function (idAssistant, responseCB) {
                 }
                 callback(null, { 'body': assistant, 'status': 200 });
             }).catch(error => {
-                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el assistant " + idAssistant }, 'status': 500 }, null);
+                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el assistant " + idAssistant , 'fields': error.fields}, 'status': 500 }, null);
             });
         }
     }, function (err, results) {
@@ -78,8 +78,7 @@ var getAllAssistants = function (idDiner, req, responseCB) {
                 };
                 cb(null, { 'body': result, 'status': 200 })
             }).catch(error => {
-                console.log(error);
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los asistentes al comedor " + idDiner }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los asistentes al comedor " + idDiner , 'fields': error.fields}, 'status': 500 }, null);
             });
         }]
     }, function (err, results) {
@@ -111,7 +110,7 @@ var createAssistant = function (assistantRequest, responseCB) {
                 results.findDiner.addAssistant(assistant);
                 cb(null, { 'body': assistant, 'status': 201 });
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error creando el assistant" }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error creando el assistant", 'fields': error.fields}, 'status': 500 }, null);
             });
         }]
     }, function (err, results) {
@@ -134,7 +133,7 @@ var updateAssistant = function (idAssistant, assistantRequest, responseCB) {
                         assistant.update(getAssistantRequest(assistantRequest)).then(function (updatedAssistant) {
                             callback(null, { 'body': updatedAssistant, 'status': 202 });
                         }).catch(error => {
-                            callback({ 'body': { 'result': 'No se puedo actualizar el assistant' }, 'status': 500 }, null);
+                            callback({ 'body': { 'result': 'No se puedo actualizar el assistant', 'fields': error.fields }, 'status': 500 }, null);
                         });
                     } else {
                         callback({ 'body': { 'result': 'No se puedo actualizar el assistant' }, 'status': 404 }, null);
@@ -181,6 +180,7 @@ var deleteAssistant = function (idAssistant, responseCB) {
                     cb(assistantResponse);
                 }).catch(error => {
                     assistantResponse.status = 500;
+                    assistantResponse.fields = error.fields                                                                                
                     assistantResponse.result = "Error eliminando el assistant " + idAssistant;
                     cb(assistantResponse);
                 });

@@ -22,7 +22,7 @@ var getEvent = function (idEvent, responseCB) {
                 }
                 callback(null, { 'body': event, 'status': 200 });
             }).catch(error => {
-                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el evento " + idEvent }, 'status': 500 }, null);
+                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el evento " + idEvent, 'fields': error.fields }, 'status': 500 }, null);
             });
         }
     }, function (err, results) {
@@ -66,7 +66,7 @@ var getAllEvents = function (idDiner, req, responseCB) {
                 };
                 cb(null, { 'body': result, 'status': 200 })
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los eventos" }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los eventos", 'fields': error.fields }, 'status': 500 }, null);
             });
         }]
     }, function (err, results) {
@@ -97,8 +97,7 @@ var createEvent = function (eventRequest, responseCB) {
                     callback(null, { 'body': eventJson, 'status': 201 });
                 });                
             }).catch(error => {
-                console.log(error);
-                callback({ 'body': { 'result': "Ha ocurrido un error creando el event" }, 'status': 500 }, null);
+                callback({ 'body': { 'result': "Ha ocurrido un error creando el event", 'fields': error.fields }, 'status': 500 }, null);
             });
         }
     }, function (err, results) {
@@ -129,8 +128,7 @@ var updateEvent = function (idEvent, eventRequest, responseCB) {
                             Promise.all(upsertPhotosPromises).then(values => console.log(values));
                             callback(null, { 'body': updatedEvent, 'status': 202 });
                         }).catch(error => {
-                            console.log(error);
-                            callback({ 'body': { 'result': 'No se puedo actualizar el evento' }, 'status': 500 }, null);
+                            callback({ 'body': { 'result': 'No se puedo actualizar el evento', 'fields': error.fields }, 'status': 500 }, null);
                         });
                     } else {
                         callback({ 'body': { 'result': 'No se puedo actualizar el evento' }, 'status': 404 }, null);
@@ -177,6 +175,7 @@ var deleteEvent = function (idEvent, responseCB) {
                 }).catch(error => {
                     eventResponse.status = 500;
                     eventResponse.result = "Error eliminando el evento " + idEvent;
+                    eventResponse.fields = error.fields                    
                     cb(eventResponse);
                 });
             } else {

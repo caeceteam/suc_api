@@ -19,7 +19,7 @@ var getFoodType = function (idFoodType, responseCB) {
                 }
                 callback(null, { 'body': foodType, 'status': 200 });
             }).catch(error => {
-                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el foodType " + idFoodType }, 'status': 500 }, null);
+                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el foodType " + idFoodType, 'fields': error.fields }, 'status': 500 }, null);
             });
         }
     }, function (err, results) {
@@ -62,7 +62,7 @@ var getAllFoodTypes = function (req, responseCB) {
                 };
                 cb(null, { 'body': result, 'status': 200 })
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los foodTypes" }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los foodTypes", 'fields': error.fields }, 'status': 500 }, null);
             });
         }]
     }, function (err, results) {
@@ -82,7 +82,7 @@ var createFoodType = function (foodTypeRequest, responseCB) {
             foodTypesModel.create(postFoodType).then(function (foodType) {
                 cb(null, { 'body': foodType, 'status': 201 });
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error creando el foodType" }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error creando el foodType", 'fields': error.fields }, 'status': 500 }, null);
             });
         }
     }, function (err, results) {
@@ -105,7 +105,7 @@ var updateFoodType = function (idFoodType, foodTypeRequest, responseCB) {
                         foodType.update(getFoodTypeRequest(foodTypeRequest)).then(function (updatedFoodType) {
                             callback(null, { 'body': updatedFoodType, 'status': 202 });
                         }).catch(error => {
-                            callback({ 'body': { 'result': 'No se puedo actualizar el foodType' }, 'status': 500 }, null);
+                            callback({ 'body': { 'result': 'No se puedo actualizar el foodType', 'fields': error.fields }, 'status': 500 }, null);
                         });
                     } else {
                         callback({ 'body': { 'result': 'No se puedo actualizar el foodType' }, 'status': 404 }, null);
@@ -155,6 +155,7 @@ var deleteFoodType = function (idFoodType, responseCB) {
                 }).catch(error => {
                     foodTypeResponse.status = 500;
                     foodTypeResponse.result = "Error eliminando el foodType " + idFoodType;
+                    foodTypeResponse.fields = error.fields                    
                     cb(foodTypeResponse);
                 });
             } else {

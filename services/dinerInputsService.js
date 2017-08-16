@@ -19,7 +19,7 @@ var getDinerInput = function (idDinerInput, responseCB) {
                 }
                 callback(null, { 'body': dinerInput, 'status': 200 });
             }).catch(error => {
-                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el dinerInput " + idDinerInput }, 'status': 500 }, null);
+                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el dinerInput " + idDinerInput, 'fields': error.fields }, 'status': 500 }, null);
             });
         }
     }, function (err, results) {
@@ -62,7 +62,7 @@ var getAllDinerInputs = function (idDiner, req, responseCB) {
                 };
                 cb(null, { 'body': result, 'status': 200 })
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los dinerInputs" }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los dinerInputs", 'fields': error.fields }, 'status': 500 }, null);
             });
         }]
     }, function (err, results) {
@@ -82,7 +82,7 @@ var createDinerInput = function (dinerInputRequest, responseCB) {
             dinerInputsModel.create(postDinerInput).then(function (dinerInput) {
                 cb(null, { 'body': dinerInput, 'status': 201 });
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error creando el dinerInput" }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error creando el dinerInput", 'fields': error.fields }, 'status': 500 }, null);
             });
         }
     }, function (err, results) {
@@ -105,7 +105,7 @@ var updateDinerInput = function (idDinerInput, dinerInputRequest, responseCB) {
                         dinerInput.update(getDinerInputRequest(dinerInputRequest)).then(function (updatedDinerInput) {
                             callback(null, { 'body': updatedDinerInput, 'status': 202 });
                         }).catch(error => {
-                            callback({ 'body': { 'result': 'No se puedo actualizar el dinerInput' }, 'status': 500 }, null);
+                            callback({ 'body': { 'result': 'No se puedo actualizar el dinerInput', 'fields': error.fields }, 'status': 500 }, null);
                         });
                     } else {
                         callback({ 'body': { 'result': 'No se puedo actualizar el dinerInput' }, 'status': 404 }, null);
@@ -152,6 +152,7 @@ var deleteDinerInput = function (idDinerInput, responseCB) {
                     cb(dinerInputResponse);
                 }).catch(error => {
                     dinerInputResponse.status = 500;
+                    dinerInputResponse.fields = error.fields                                                            
                     dinerInputResponse.result = "Error eliminando el dinerInput " + idDinerInput;
                     cb(dinerInputResponse);
                 });
