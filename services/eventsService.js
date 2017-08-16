@@ -84,10 +84,18 @@ var createEvent = function (eventRequest, responseCB) {
         createEvent: function (callback) {
             var postEvent = getEventRequest(eventRequest);
             eventsModel.create(postEvent).then(function (event) {
+                var insertPhotosPromises = [];                
                 for (var photo in postEvent.photos) {
-                    event.createPhoto(postEvent.photos[photo]);
+                    var url = postEvent.photos[photo];
+                    var postPhoto = {url: url, idEvent: event.idEvent};
+                    insertPhotosPromises.push(models.EventPhoto.create(postPhoto));                    
                 }
-                callback(null, { 'body': event, 'status': 201 });
+                Promise.all(insertPhotosPromises).then(function(values){
+                    var eventJson = event.toJSON()
+                    console.log(values);
+                    eventJson.photos = values;
+                    callback(null, { 'body': eventJson, 'status': 201 });
+                });                
             }).catch(error => {
                 console.log(error);
                 callback({ 'body': { 'result': "Ha ocurrido un error creando el event" }, 'status': 500 }, null);

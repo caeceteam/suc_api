@@ -127,22 +127,25 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
                 callback({ 'body': { 'result': "Ha ocurrido un error creando el diner" }, 'status': 500 }, null);
             });
         },
-        createPhoto: ['createDiner', function (results, cb) {
+        createPhotos: ['createDiner', function (results, cb) {
+            var diner = results.createDiner.body;
             var postDiner = getDinerRequest(dinerRequest);
-            if (postDiner.photo && postDiner.photo.length > 0) {
-                var dinerPhotoRequest = {
-                    idDiner: results.createDiner.body.idDiner,
-                    url: postDiner.photo
+            if (postDiner.photos && postDiner.photos.length > 0) {
+                var insertPhotosPromises = [];                
+                for (var photo in postDiner.photos) {
+                    var url = postDiner.photos[photo];
+                    var postPhoto = {url: url, idDiner: diner.idDiner};
+                    console.log(postPhoto);
+                    insertPhotosPromises.push(models.DinerPhoto.create(postPhoto));                    
                 }
-                dinerPhotosService.createDinerPhoto(dinerPhotoRequest, function (err, result) {
-                    if (!err) {
-                        cb(null, { 'photo': result, 'status': 201 })
-                    } else {
-                        cb({ 'body': { 'result': "Ha ocurrido un error creando la photo" }, 'status': 500 }, null);
-                    }
-                });
+                Promise.all(insertPhotosPromises).then(function(values){
+                    cb(null, { 'body': values, 'status': 201 });
+                }).catch(error => {
+                    console.log(error);
+                    cb({ 'body': { 'result': "Ha ocurrido un error creando las photos" }, 'status': 500 }, null);
+                });;  
             } else {
-                cb(null, { 'photo': {}, 'status': 204 })
+                cb(null, { 'body': {}, 'status': 204 })
             }
         }],
         createUser: ['createDiner', function (results, cb) {
@@ -155,17 +158,16 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
                 var result = { diner: diner, user: user };
                 cb(null, { 'body': result, 'status': 201 })
             }).catch(error => {
-                diner.destroy(); //Un falso rollback hasta que podamos implementar algo mejor
                 cb({ 'body': { 'result': "Ha ocurrido un error creando el usuario" }, 'status': 500 }, null);
             });
         }],
-        endDinerCreation: ['createPhoto', 'createUser', function (results, cb) {
+        endDinerCreation: ['createPhotos', 'createUser', function (results, cb) {
             try {
                 var dinerJson = results.createUser.body.diner.toJSON();
                 var user = results.createUser.body.user;
-                var photo = results.createPhoto.photo.body;
-
-                dinerJson.photo = photo;
+                var photos = results.createPhotos.body;
+                console.log(photos);
+                dinerJson.photos = photos;
                 var dinerResponse = {
                     diner: dinerJson,
                     user: user
@@ -302,7 +304,7 @@ var getDinerRequest = function (dinerRequest) {
         description: dinerRequest.description,
         link: dinerRequest.link,
         mail: dinerRequest.mail,
-        photo: dinerRequest.photo
+        photos: dinerRequest.photos
     }
 }
 module.exports = {
