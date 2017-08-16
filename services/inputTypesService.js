@@ -20,7 +20,7 @@ var getInputType = function (idInputType, responseCB) {
                 }
                 callback(null, { 'body': inputType, 'status': 200 });
             }).catch(error => {
-                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el inputType " + idInputType }, 'status': 500 }, null);
+                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el inputType " + idInputType, 'fields': error.fields }, 'status': 500 }, null);
             });
         }
     }, function (err, results) {
@@ -63,7 +63,7 @@ var getAllInputTypes = function (req, responseCB) {
                 };
                 cb(null, { 'body': result, 'status': 200 })
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los inputTypes" }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los inputTypes", 'fields': error.fields }, 'status': 500 }, null);
             });
         }]
     }, function (err, results) {
@@ -83,7 +83,7 @@ var createInputType = function (inputTypeRequest, responseCB) {
             inputTypesModel.create(postInputType).then(function (inputType) {
                 cb(null, { 'body': inputType, 'status': 201 });
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error creando el inputType" }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error creando el inputType", 'fields': error.fields }, 'status': 500 }, null);
             });
         }
     }, function (err, results) {
@@ -106,7 +106,7 @@ var updateInputType = function (idInputType, inputTypeRequest, responseCB) {
                         inputType.update(getInputTypeRequest(inputTypeRequest)).then(function (updatedInputType) {
                             callback(null, { 'body': updatedInputType, 'status': 202 });
                         }).catch(error => {
-                            callback({ 'body': { 'result': 'No se puedo actualizar el inputType' }, 'status': 500 }, null);
+                            callback({ 'body': { 'result': 'No se puedo actualizar el inputType', 'fields': error.fields }, 'status': 500 }, null);
                         });
                     } else {
                         callback({ 'body': { 'result': 'No se puedo actualizar el inputType' }, 'status': 404 }, null);
@@ -156,6 +156,7 @@ var deleteInputType = function (idInputType, responseCB) {
                 }).catch(error => {
                     inputTypeResponse.status = 500;
                     inputTypeResponse.result = "Error eliminando el inputType " + idInputType;
+                    inputTypeResponse.fields = error.fields                    
                     cb(inputTypeResponse);
                 });
             } else {

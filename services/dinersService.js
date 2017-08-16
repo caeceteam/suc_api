@@ -27,21 +27,21 @@ var getDiner = function (idDiner, responseCB) {
                 }
                 callback(null, { 'body': diner, 'status': 200 });
             }).catch(error => {
-                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el diner " + idDiner }, 'status': 500 }, null);
+                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el diner " + idDiner, 'fields': error.fields }, 'status': 500 }, null);
             });
         },
         findPhotos: ['findDiner', function (results, cb) {
             results.findDiner.body.getPhotos().then(function (photos) {
                 cb(null, { 'body': photos });
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo las photos para el diner " + idDiner }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo las photos para el diner " + idDiner, 'fields': error.fields }, 'status': 500 }, null);
             });;
         }],
         findUsers: ['findDiner', function (results, cb) {
             results.findDiner.body.getUsers().then(function (users) {
                 cb(null, { 'body': users });
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los user para el diner " + idDiner }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los user para el diner " + idDiner, 'fields': error.fields }, 'status': 500 }, null);
             });;
         }],
         endedDinerResponse: ['findPhotos', 'findUsers', function (results, cb) {
@@ -103,7 +103,7 @@ var getAllDiners = function (req, responseCB) {
                 };
                 cb(null, { 'body': result, 'status': 200 })
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los diners" }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los diners", 'fields': error.fields }, 'status': 500 }, null);
             });
         }]
     }, function (err, results) {
@@ -124,7 +124,7 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
             dinersModel.create(postDiner).then(function (diner) {
                 callback(null, { 'body': diner, 'status': 201 });
             }).catch(error => {
-                callback({ 'body': { 'result': "Ha ocurrido un error creando el diner" }, 'status': 500 }, null);
+                callback({ 'body': { 'result': "Ha ocurrido un error creando el diner", 'fields': error.fields }, 'status': 500 }, null);
             });
         },
         createPhotos: ['createDiner', function (results, cb) {
@@ -142,7 +142,7 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
                     cb(null, { 'body': values, 'status': 201 });
                 }).catch(error => {
                     console.log(error);
-                    cb({ 'body': { 'result': "Ha ocurrido un error creando las photos" }, 'status': 500 }, null);
+                    cb({ 'body': { 'result': "Ha ocurrido un error creando las photos", 'fields': error.fields }, 'status': 500 }, null);
                 });;  
             } else {
                 cb(null, { 'body': {}, 'status': 204 })
@@ -158,7 +158,7 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
                 var result = { diner: diner, user: user };
                 cb(null, { 'body': result, 'status': 201 })
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error creando el usuario" }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error creando el usuario", 'fields': error.fields }, 'status': 500 }, null);
             });
         }],
         endDinerCreation: ['createPhotos', 'createUser', function (results, cb) {
@@ -196,7 +196,7 @@ var updateDiner = function (idDiner, dinerRequest, responseCB) {
                     diner.update(getDinerRequest(dinerRequest)).then(function (updatedDiner) {
                         callback(null, { 'body': updatedDiner, 'status': 202 });
                     }).catch(error => {
-                        callback({ 'body': { 'result': 'No se puedo actualizar el comedor' }, 'status': 500 }, null);
+                        callback({ 'body': { 'result': 'No se puedo actualizar el comedor', 'fields': error.fields }, 'status': 500 }, null);
                     });
                 } else {
                     callback({ 'body': { 'result': 'No se puedo actualizar el comedor' }, 'status': 404 }, null);
@@ -269,6 +269,7 @@ var deleteDinerById = function (idDiner, callback) {
     }).catch(error => {
         dinerResponse.status = 500;
         dinerResponse.result = "Error eliminando el comedor " + idDiner;
+        dinerResponse.fields = error.fields                    
         callback(dinerResponse);
     });
 }

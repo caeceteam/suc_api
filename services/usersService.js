@@ -20,7 +20,7 @@ var getUser = function (searchParam, responseCB) {
                 }
                 callback(null, { 'body': user, 'status': 200 });
             }).catch(error => {
-                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el user " + searchParam }, 'status': 500 }, null);
+                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el user " + searchParam, 'fields': error.fields }, 'status': 500 }, null);
             });
         }
     }, function (err, results) {
@@ -63,7 +63,7 @@ var getAllUsers = function (req, responseCB) {
                 };
                 cb(null, { 'body': result, 'status': 200 })
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los users" }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los users", 'fields': error.fields }, 'status': 500 }, null);
             });
         }]
     }, function (err, results) {
@@ -83,7 +83,7 @@ var createUser = function (userRequest, responseCB) {
             usersModel.create(postUser).then(function (user) {
                 cb(null, { 'body': user, 'status': 201 });
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error creando el user" }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error creando el user", 'fields': error.fields }, 'status': 500 }, null);
             });
         }
     }, function (err, results) {
@@ -106,10 +106,10 @@ var updateUser = function (searchParam, userRequest, responseCB) {
                         user.update(getUserRequest(userRequest, false)).then(function (updatedUser) {
                             callback(null, { 'body': updatedUser, 'status': 202 });
                         }).catch(error => {
-                            callback({ 'body': { 'result': 'No se puedo actualizar el usuario' }, 'status': 500 }, null);
+                            callback({ 'body': { 'result': 'No se puedo actualizar el usuario', 'fields': error.fields }, 'status': 500 }, null);
                         });
                     } else {
-                        callback({ 'body': { 'result': 'No se puedo actualizar el usuario' }, 'status': 404 }, null);
+                        callback({ 'body': { 'result': 'No se puedo actualizar el usuario', 'fields': error.fields }, 'status': 404 }, null);
                     }
                 } else {
                     callback(err, null);
@@ -156,6 +156,7 @@ var deleteUser = function (idUser, responseCB) {
                 }).catch(error => {
                     userResponse.status = 500;
                     userResponse.result = "Error eliminando el usuario " + idUser;
+                    userResponse.fields = error.fields
                     cb(userResponse);
                 });
             } else {
