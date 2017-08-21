@@ -1,9 +1,9 @@
 {
   "development": {
-    "username": "sucadmin",
-    "password": "sucadmin2017",
+    "username": "root",
+    "password": "123456",
     "database": "suc_db",
-    "host": "127.0.0.1",
+    "host": "10.130.63.16",
     "dialect": "mysql"
   },
   "test": {
