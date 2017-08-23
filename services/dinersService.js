@@ -1,6 +1,7 @@
 var models = require('../models/');
 var usersService = require('./usersService');
 var dinerPhotosService = require('./dinerPhotosService');
+var enumerations = require('../enums/enumerations');
 var async = require('async');
 var dinersModel = models.Diner;
 var usersModel = models.User;
@@ -70,7 +71,7 @@ var getDiner = function (idDiner, responseCB) {
 var getAllDiners = function (req, responseCB) {
     var whereClosure = {};
     if (req.query.state) {
-        var enumValue = enumsRouter.enumerations.dinerStates[req.query.state];
+        var enumValue = req.query.state;
         whereClosure = { state: enumValue }
     }
 
@@ -278,7 +279,7 @@ var setDinerByIdAsInactive = function (idDiner, callback) {
     var dinerResponse = {};
     dinersModel.find({ where: { idDiner: idDiner } }).then(function (diner) {
         if (diner) {
-            diner.state = 0;
+            diner.state = -1;
             diner.save();
             dinerResponse.status = 202;
             dinerResponse.result = diner;
