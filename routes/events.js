@@ -1,13 +1,13 @@
 var express = require('express');
 var router = express.Router();
 var app = express();
-var foodTypesService = require('../services/foodTypesService');
+var eventsService = require('../services/eventsService');
 
-/* GET foodTypes listing. */
-router.get('/:idFoodType?', function (req, res, next) {
-    var idFoodType = req.params.idFoodType;
-    if (idFoodType) {
-        foodTypesService.getFoodType(idFoodType, function (err, result) {
+/* GET users listing. */
+router.get('/:idEvent?', function (req, res, next) {
+    var idEvent = req.params.idEvent;
+    if (idEvent) {
+        eventsService.getEvent(idEvent, function (err, result) {
             if (!err) {
                 res.status(result.status).json(result.body);
             } else {
@@ -15,7 +15,8 @@ router.get('/:idFoodType?', function (req, res, next) {
             }
         });
     } else {
-        foodTypesService.getAllFoodTypes(req, function (err, result) {
+        var idDiner = req.query.idDiner;
+        eventsService.getAllEvents(idDiner,req, function (err, result) {
             if (!err) {
                 res.status(result.status).json(result.body);
             } else {
@@ -25,10 +26,10 @@ router.get('/:idFoodType?', function (req, res, next) {
     }
 });
 
-/* POST de foodTypes. */
+/* POST de user. */
 router.post('/', function (req, res, next) {
-    var foodTypeRequest = req.body;
-    foodTypesService.createFoodType(foodTypeRequest, function (err, result) {
+    var eventRequest = req.body;
+    eventsService.createEvent(eventRequest, function (err, result) {
         if (!err) {
             res.status(result.status).json(result.body);
         } else {
@@ -37,10 +38,9 @@ router.post('/', function (req, res, next) {
     });
 });
 
-
-router.put('/:idFoodType', function (req, res, next) {
-    var idFoodType = req.params.idFoodType;
-    foodTypesService.updateFoodType(idFoodType, req.body, function (err, result) {
+router.put('/:idEvent', function (req, res, next) {
+    var idEvent = req.params.idEvent;
+    eventsService.updateEvent(idEvent, req.body, function (err, result) {
         if (!err) {
             res.status(result.status).json(result.body);
         } else {
@@ -49,9 +49,9 @@ router.put('/:idFoodType', function (req, res, next) {
     });
 });
 
-router.delete('/:idFoodType', function (req, res, next) {
-    var idFoodType = req.params.idFoodType;
-    foodTypesService.deleteFoodType(idFoodType, function (err, result) {
+router.delete('/:idEvent', function (req, res, next) {
+    var idEvent = req.params.idEvent;
+    eventsService.deleteEvent(idEvent, function (err, result) {
         if (!err) {
             res.status(result.status).json(result.body);
         } else {
