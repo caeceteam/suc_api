@@ -7,6 +7,7 @@ var bodyParser = require('body-parser');
 var jwt = require('jsonwebtoken')
 
 var index = require('./routes/index');
+var health = require('./routes/health');
 var users = require('./routes/users');
 var authentication = require('./routes/authentication');
 var inputTypes = require('./routes/inputTypes');
@@ -84,6 +85,7 @@ var validateToken = function (req, res, next) {
 app.use('/api', apiRoutes);
 
 app.use('/', index);
+app.use('/health', health);
 app.use('/authentication', authentication);
 app.use('/api/users', users);
 app.use('/api/inputTypes', inputTypes);
