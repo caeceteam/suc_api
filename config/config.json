@@ -1,9 +1,9 @@
 {
   "development": {
-    "username": "root",
-    "password": "123456",
-    "database": "suc_db",
-    "host": "10.130.63.16",
+    "username": "b9052dbd831a01",
+    "password": "4142cb02",
+    "database": "heroku_d6dcd1b0ab23060",
+    "host": "us-cdbr-iron-east-05.cleardb.net",
     "dialect": "mysql"
   },
   "test": {
