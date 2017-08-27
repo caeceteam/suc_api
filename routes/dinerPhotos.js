@@ -1,13 +1,14 @@
 var express = require('express');
 var router = express.Router();
 var app = express();
-var dinersService = require('../services/dinersService')
+var dinerPhotosService = require('../services/dinerPhotosService');
 
-/* GET diners listing. */
-router.get('/:idDiner?', function (req, res, next) {
+/* GET diner photos listing. */
+router.get('/:idDiner/:idPhoto?', function (req, res, next) {
     var idDiner = req.params.idDiner;
-    if (idDiner) {
-        dinersService.getDiner(idDiner, function (err, result) {
+    var idPhoto = req.params.idPhoto;
+    if (idDiner && idPhoto) {
+        dinerPhotosService.getDinerPhoto(idDiner, idPhoto, function (err, result) {
             if (!err) {
                 res.status(result.status).json(result.body);
             } else {
@@ -15,7 +16,7 @@ router.get('/:idDiner?', function (req, res, next) {
             }
         });
     } else {
-        dinersService.getAllDiners(req, function (err, result) {
+        dinerPhotosService.getAllDinerPhotos(idDiner, function (err, result) {
             if (!err) {
                 res.status(result.status).json(result.body);
             } else {
@@ -25,13 +26,10 @@ router.get('/:idDiner?', function (req, res, next) {
     }
 });
 
-/* POST de diners. */
+/* POST de dinerPhoto. */
 router.post('/', function (req, res, next) {
-    var idDiner;
-    var dinerRequest = req.body.diner;
-    var userRequest = req.body.user;
-
-    dinersService.createDiner(dinerRequest, userRequest, function (err, result) {
+    var dinerPhotoRequest = req.body;
+    dinerPhotosService.createDinerPhoto(dinerPhotoRequest, function (err, result) {
         if (!err) {
             res.status(result.status).json(result.body);
         } else {
@@ -40,9 +38,14 @@ router.post('/', function (req, res, next) {
     });
 });
 
-router.put('/:idDiner', function (req, res, next) {
-    var idDiner = req.params.idDiner;
-    dinersService.updateDiner(idDiner, req.body, function (err, result) {
+
+router.put('/:idDiner/:idPhoto', function (req, res, next) {
+    var dinerPhotoRequest = {
+        idDiner: req.params.idDiner,
+        idPhoto: req.params.idPhoto,
+        url: req.body.url
+    };
+    dinerPhotosService.updateDinerPhoto(dinerPhotoRequest, function (err, result) {
         if (!err) {
             res.status(result.status).json(result.body);
         } else {
@@ -51,9 +54,10 @@ router.put('/:idDiner', function (req, res, next) {
     });
 });
 
-router.delete('/:idDiner', function (req, res, next) {
+router.delete('/:idDiner/:idPhoto', function (req, res, next) {
     var idDiner = req.params.idDiner;
-    dinersService.deleteDiner(idDiner, function (err, result) {
+    var idPhoto = req.params.idPhoto;
+    dinerPhotosService.deleteDinerPhoto(idDiner, idPhoto, function (err, result) {
         if (!err) {
             res.status(result.status).json(result.body);
         } else {

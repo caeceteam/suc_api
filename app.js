@@ -7,15 +7,17 @@ var bodyParser = require('body-parser');
 var jwt = require('jsonwebtoken')
 
 var index = require('./routes/index');
+var health = require('./routes/health');
 var users = require('./routes/users');
 var authentication = require('./routes/authentication');
 var inputTypes = require('./routes/inputTypes');
 var foodTypes = require('./routes/foodTypes');
 var diners = require('./routes/diners');
 var dinerInputs = require('./routes/dinerInputs');
+var dinerPhotos = require('./routes/dinerPhotos');
+var assistants = require('./routes/assistants');
 var enumerations = require('./routes/enumerations');
-
-
+var events = require('./routes/events');
 
 
 var app = express();
@@ -84,6 +86,7 @@ var validateToken = function (req, res, next) {
 app.use('/api', apiRoutes);
 
 app.use('/', index);
+app.use('/health', health);
 app.use('/authentication', authentication);
 app.use('/api/users', users);
 app.use('/api/inputTypes', inputTypes);
@@ -91,8 +94,9 @@ app.use('/api/foodTypes', foodTypes);
 app.use('/api/diners', diners);
 app.use('/api/dinerInputs', dinerInputs);
 app.use('/api/enumerations', enumerations);
-
-
+app.use('/api/dinerPhotos', dinerPhotos);
+app.use('/api/assistants', assistants);
+app.use('/api/events', events);
 
 
 // catch 404 and forward to error handler
