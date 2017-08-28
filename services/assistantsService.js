@@ -22,14 +22,23 @@ var getAssistant = function (idAssistant, responseCB) {
                     // incorrect dinerInput
                     return callback({ 'body': {}, 'status': 404 }, null);
                 }
-                callback(null, { 'body': assistant, 'status': 200 });
+                callback(null, assistant);
             }).catch(error => {
-                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el assistant " + idAssistant , 'fields': error.fields}, 'status': 500 }, null);
+                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el assistant " + idAssistant, 'fields': error.fields }, 'status': 500 }, null);
             });
-        }
+        }, findDiner: ['findAssistant', function (results, cb) {
+            var assistant = results.findAssistant;
+            assistant.getDiners().then(function (diner) {
+                var assistantResponse = { diner: diner, assistant: assistant };
+                cb(null, { 'body': assistantResponse, 'status': 200 });
+            }).catch(error => {
+                console.log(error);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo el assistant " + idAssistant, 'fields': error.fields }, 'status': 500 }, null);
+            });;
+        }]
     }, function (err, results) {
         if (!err) {
-            responseCB(null, results.findAssistant);
+            responseCB(null, results.findDiner);
         } else {
             responseCB(err, null);
         }
@@ -78,7 +87,7 @@ var getAllAssistants = function (idDiner, req, responseCB) {
                 };
                 cb(null, { 'body': result, 'status': 200 })
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los asistentes al comedor " + idDiner , 'fields': error.fields}, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los asistentes al comedor " + idDiner, 'fields': error.fields }, 'status': 500 }, null);
             });
         }]
     }, function (err, results) {
@@ -107,10 +116,13 @@ var createAssistant = function (assistantRequest, responseCB) {
         createAssistant: ['findDiner', function (results, cb) {
             var postAssistant = getAssistantRequest(assistantRequest);
             assistantsModel.create(postAssistant).then(function (assistant) {
+                assistant.DinerAssistant = { active: postAssistant.active };
                 results.findDiner.addAssistant(assistant);
-                cb(null, { 'body': assistant, 'status': 201 });
+                jsonCreatedAssistant = assistant.toJSON();
+                jsonCreatedAssistant.active = postAssistant.active;
+                cb(null, { 'body': jsonCreatedAssistant, 'status': 201 });
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error creando el assistant", 'fields': error.fields}, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error creando el assistant", 'fields': error.fields }, 'status': 500 }, null);
             });
         }]
     }, function (err, results) {
@@ -123,26 +135,44 @@ var createAssistant = function (assistantRequest, responseCB) {
 }
 
 var updateAssistant = function (idAssistant, assistantRequest, responseCB) {
+    var putAssistant = getAssistantRequest(assistantRequest);
     async.auto({
         // this function will just be passed a callback
-        updateAssistant: function (callback) {
-            getAssistant(idAssistant, function (err, result) {
+        findDiner: function (callback) {
+            dinersService.getDiner(putAssistant.idDiner, function (err, result) {
                 if (!err) {
-                    var assistant = result.body;
-                    if (assistant) {
-                        assistant.update(getAssistantRequest(assistantRequest)).then(function (updatedAssistant) {
-                            callback(null, { 'body': updatedAssistant, 'status': 202 });
-                        }).catch(error => {
-                            callback({ 'body': { 'result': 'No se puedo actualizar el assistant', 'fields': error.fields }, 'status': 500 }, null);
-                        });
-                    } else {
-                        callback({ 'body': { 'result': 'No se puedo actualizar el assistant' }, 'status': 404 }, null);
-                    }
+                    callback(null, result.body.diner);
                 } else {
                     callback(err, null);
                 }
             });
-        }
+        },
+        findAssistant: function (callback) {
+            getAssistant(idAssistant, function (err, result) {
+                if (!err) {
+                    callback(null, result.body.assistant);
+                } else {
+                    callback(err, null);
+                }
+            });
+        },
+        updateAssistant: ['findDiner', 'findAssistant', function (results, callback) {
+            var assistant = results.findAssistant;
+            var diner = results.findDiner;
+            if (assistant) {
+                assistant.update(putAssistant).then(function (updatedAssistant) {
+                    dinerAssistantsModel.upsert({idAssistant:assistant.idAssistant,idDiner:diner.idDiner,active:putAssistant.active});
+                    var jsonUpdatedAssistant = updatedAssistant.toJSON();
+                    jsonUpdatedAssistant.active = putAssistant.active;
+                    callback(null, { 'body':jsonUpdatedAssistant, 'status': 202 });
+                }).catch(error => {
+                    console.log(error);
+                    callback({ 'body': { 'result': 'No se puedo actualizar el assistant', 'fields': error.fields }, 'status': 500 }, null);
+                });
+            } else {
+                callback({ 'body': { 'result': 'No se puedo actualizar el assistant' }, 'status': 404 }, null);
+            }
+        }]
     }, function (err, results) {
         if (!err) {
             responseCB(null, results.updateAssistant);
@@ -180,7 +210,7 @@ var deleteAssistant = function (idAssistant, responseCB) {
                     cb(assistantResponse);
                 }).catch(error => {
                     assistantResponse.status = 500;
-                    assistantResponse.fields = error.fields                                                                                
+                    assistantResponse.fields = error.fields
                     assistantResponse.result = "Error eliminando el assistant " + idAssistant;
                     cb(assistantResponse);
                 });
@@ -217,7 +247,8 @@ var getAssistantRequest = function (request) {
         economicSituation: request.economicSituation,
         celiac: request.celiac,
         diabetic: request.diabetic,
-        document: request.document
+        document: request.document,
+        active: request.active
     };
 }
 
