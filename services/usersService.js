@@ -96,6 +96,7 @@ var createUser = function (userRequest, responseCB) {
 }
 
 var updateUser = function (searchParam, userRequest, responseCB) {
+    console.log("entre a updatear");
     async.auto({
         // this function will just be passed a callback
         updateUser: function (callback) {
@@ -191,13 +192,12 @@ var getUserRequest = function (request, shouldCreatePassword) {
         role: request.role,
         docNumber: request.docNumber,
         bornDate: request.bornDate,
-        state: request.state
+        active: request.active
     };
 
     if (shouldCreatePassword == true) {
         userRequest.pass = hash.update(password).digest("base64");
     }
-
     return userRequest;
 };
 
