@@ -132,19 +132,17 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
             var diner = results.createDiner.body;
             var postDiner = getDinerRequest(dinerRequest);
             if (postDiner.photos && postDiner.photos.length > 0) {
-                var insertPhotosPromises = [];                
+                var insertPhotosPromises = [];
                 for (var photo in postDiner.photos) {
                     var url = postDiner.photos[photo];
-                    var postPhoto = {url: url, idDiner: diner.idDiner};
-                    console.log(postPhoto);
-                    insertPhotosPromises.push(models.DinerPhoto.create(postPhoto));                    
+                    var postPhoto = { url: url, idDiner: diner.idDiner };
+                    insertPhotosPromises.push(models.DinerPhoto.create(postPhoto));
                 }
-                Promise.all(insertPhotosPromises).then(function(values){
+                Promise.all(insertPhotosPromises).then(function (values) {
                     cb(null, { 'body': values, 'status': 201 });
                 }).catch(error => {
-                    console.log(error);
                     cb({ 'body': { 'result': "Ha ocurrido un error creando las photos", 'fields': error.fields }, 'status': 500 }, null);
-                });;  
+                });;
             } else {
                 cb(null, { 'body': {}, 'status': 204 })
             }
@@ -155,6 +153,7 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
             var diner = results.createDiner.body;
             postUser.idDiner = diner.idDiner;
             usersModel.create(postUser).then(function (user) {
+                user.DinerUser = { active: postUser.active };
                 diner.addUser(user);
                 var result = { diner: diner, user: user };
                 cb(null, { 'body': result, 'status': 201 })
@@ -167,7 +166,6 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
                 var dinerJson = results.createUser.body.diner.toJSON();
                 var user = results.createUser.body.user;
                 var photos = results.createPhotos.body;
-                console.log(photos);
                 dinerJson.photos = photos;
                 var dinerResponse = {
                     diner: dinerJson,
@@ -188,25 +186,62 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
     });
 }
 
-var updateDiner = function (idDiner, dinerRequest, responseCB) {
+var updateDiner = function (idDiner, requests, responseCB) {
+    var dinerRequest = requests.diner;
+    var userRequest = requests.user;
     async.auto({
         // this function will just be passed a callback
-        updateDiner: function (callback) {
-            dinersModel.find({ where: { idDiner: idDiner } }).then(function (diner) {
-                if (diner) {
-                    diner.update(getDinerRequest(dinerRequest)).then(function (updatedDiner) {
-                        callback(null, { 'body': updatedDiner, 'status': 202 });
-                    }).catch(error => {
-                        callback({ 'body': { 'result': 'No se puedo actualizar el comedor', 'fields': error.fields }, 'status': 500 }, null);
-                    });
+        findDiner: function (callback) {
+            getDiner(idDiner, function (err, result) {
+                if (!err) {
+                    callback(null, result.body.diner);
                 } else {
-                    callback({ 'body': { 'result': 'No se puedo actualizar el comedor' }, 'status': 404 }, null);
+                    callback(err, null);
                 }
             });
-        }
+        },
+        findUser: function (callback) {
+            usersService.getUser(userRequest.mail, function (err, result) {
+                if (!err) {
+                    callback(null, result.body);
+                } else {
+                    callback(err, null);
+                }
+            });
+        },
+        updateDiner: ['findDiner', function (results, callback) {
+            var diner = results.findDiner;
+            if (diner) {
+                diner.update(getDinerRequest(dinerRequest)).then(function (updatedDiner) {
+                    callback(null, updatedDiner);
+                }).catch(error => {
+                    console.log(error);
+                    callback({ 'body': { 'result': 'No se puedo actualizar el comedor', 'fields': error.fields }, 'status': 500 }, null);
+                });
+            } else {
+                callback({ 'body': { 'result': 'No se puedo actualizar el comedor' }, 'status': 404 }, null);
+            }
+        }],
+        updateUser: ['findUser', function (results, callback) {
+            var user = results.findUser;
+            usersService.updateUser(userRequest.mail, userRequest, function (err, result) {
+                var updatedUser = result.body;
+                if (user) {
+                    usersDinersModel.upsert({ idUser: updatedUser.idUser, idDiner: idDiner, active: userRequest.active });
+                    var jsonUpdatedUser = updatedUser.toJSON();
+                    jsonUpdatedUser.active = userRequest.active;
+                    callback(null, jsonUpdatedUser);
+                } else {
+                    callback({ 'body': { 'result': 'No se puedo actualizar el usuario' }, 'status': 404 }, null);
+                }
+            });
+
+        }]
     }, function (err, results) {
+        console.log(results);
+        console.log(err);
         if (!err) {
-            responseCB(null, results.updateDiner);
+            responseCB(null, {"body": {diner: results.updateDiner, user: results.updateUser }, "status": 202 });
         } else {
             responseCB(err, null);
         }
@@ -236,7 +271,6 @@ var deleteDiner = function (idDiner, responseCB) {
         }],
         processDiner: ['countUsers', function (results, cb) {
             var usersLength = results.countUsers.body;
-            console.log(usersLength);
             if (usersLength == 0) {
                 deleteDinerById(idDiner, function (result) {
                     cb(null, { 'body': result.result, 'status': result.status });
@@ -270,7 +304,7 @@ var deleteDinerById = function (idDiner, callback) {
     }).catch(error => {
         dinerResponse.status = 500;
         dinerResponse.result = "Error eliminando el comedor " + idDiner;
-        dinerResponse.fields = error.fields                    
+        dinerResponse.fields = error.fields
         callback(dinerResponse);
     });
 }
