@@ -240,6 +240,8 @@ var getAssistantRequest = function (request) {
         floor: request.floor,
         door: request.door,
         zipcode: request.zipcode,
+        latitude: request.latitude,
+        longitude: request.longitude,
         phone: request.phone,
         contactName: request.contactName,
         scholarship: request.scholarship,
