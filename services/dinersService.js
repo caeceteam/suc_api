@@ -51,6 +51,9 @@ var getDiner = function (idDiner, responseCB) {
             var photos = results.findPhotos.body;
             if (users.length == 1) {
                 user = users[0];
+                user = user.toJSON();
+                user.active = user.UserDiner.active;
+                user.UserDiner = undefined;
             }
             dinerResponse = {
                 diner: results.findDiner.body,
