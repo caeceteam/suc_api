@@ -1,5 +1,6 @@
 var models = require('../models/');
-var Sequelize = require('sequelize');
+var sequelize = require('sequelize');
+var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var dinersService = require('./dinersService');
 var assistantsModel = models.Assistant;
@@ -47,6 +48,8 @@ var getAssistant = function (idAssistant, responseCB) {
 
 var getAllAssistants = function (idDiner, req, responseCB) {
     var whereClosure =  sequelize.and ( queryHelper.buildQuery("Assistant",req.query) ) ;
+
+    console.log(whereClosure);
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;
@@ -72,7 +75,7 @@ var getAllAssistants = function (idDiner, req, responseCB) {
             });
         }],
         paginate: ['assistantsCount', function (results, cb) {
-            results.assistantsCount.diner.getAssistants({ offset: page_size * page, limit: Math.ceil(page_size) }).then(function (assistantsCol) {
+            results.assistantsCount.diner.getAssistants({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure }).then(function (assistantsCol) {
                 var total_pages = Math.ceil(results.assistantsCount.qty / page_size);
                 var number_of_elements = assistantsCol.length;
                 var result = {
