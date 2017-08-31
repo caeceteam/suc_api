@@ -46,7 +46,7 @@ var getAssistant = function (idAssistant, responseCB) {
 }
 
 var getAllAssistants = function (idDiner, req, responseCB) {
-    var whereClosure = { idDiner: idDiner };
+    var whereClosure =  sequelize.and ( queryHelper.buildQuery("Assistant",req.query) ) ;
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;
