@@ -1,3 +1,5 @@
+var sequelize = require('sequelize');
+var queryHelper = require('../helpers/queryHelper');
 var models = require('../models/');
 var usersService = require('./usersService');
 var dinerPhotosService = require('./dinerPhotosService');
@@ -69,12 +71,7 @@ var getDiner = function (idDiner, responseCB) {
 }
 
 var getAllDiners = function (req, responseCB) {
-    var whereClosure = {};
-    if (req.query.state) {
-        var enumValue = req.query.state;
-        whereClosure = { state: enumValue }
-    }
-
+    var whereClosure =  sequelize.and ( queryHelper.buildQuery("Diner",req.query) ) ;
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;
