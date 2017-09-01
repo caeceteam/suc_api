@@ -1,4 +1,6 @@
 var models = require('../models/');
+var sequelize = require('sequelize');
+var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var foodTypesModel = models.FoodType;
 
@@ -32,7 +34,7 @@ var getFoodType = function (idFoodType, responseCB) {
 }
 
 var getAllFoodTypes = function (req, responseCB) {
-    var whereClosure = {};
+    var whereClosure = sequelize.and ( queryHelper.buildQuery("FoodType",req.query) ) ;
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;
