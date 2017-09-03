@@ -8,6 +8,7 @@ var getDinerInput = function (idDinerInput, responseCB) {
     async.auto({
         // this function will just be passed a callback
         findDinerInput: function (callback) {
+            console.log("llego a findDinerInput");
             dinerInputsModel.find({ where: { idDinerInput: idDinerInput } }).then(function (dinerInput, err) {
                 if (err) {
                     // dinerInput not found 
@@ -18,8 +19,10 @@ var getDinerInput = function (idDinerInput, responseCB) {
                     // incorrect dinerInput
                     return callback({ 'body': {}, 'status': 404 }, null);
                 }
+                console.log("encontro algo!");
                 callback(null, { 'body': dinerInput, 'status': 200 });
             }).catch(error => {
+                console.log(error);
                 callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el dinerInput " + idDinerInput, 'fields': error.fields }, 'status': 500 }, null);
             });
         }
@@ -41,6 +44,7 @@ var getAllDinerInputs = function (idDiner, req, responseCB) {
     async.auto({
         // this function will just be passed a callback
         dinerInputsCount: function (callback) {
+            console.log("conteo");
             dinerInputsModel.count({ where: whereClosure }).then(function (dinerInputsQty) {
                 callback(null, dinerInputsQty)
             }).catch(error => {
@@ -48,6 +52,7 @@ var getAllDinerInputs = function (idDiner, req, responseCB) {
             });
         },
         paginate: ['dinerInputsCount', function (results, cb) {
+            console.log("pagino");
             dinerInputsModel.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure }).then(function (dinerInputsCol) {
                 var total_pages = Math.ceil(results.dinerInputsCount / page_size);
                 var number_of_elements = dinerInputsCol.length;
@@ -63,6 +68,7 @@ var getAllDinerInputs = function (idDiner, req, responseCB) {
                 };
                 cb(null, { 'body': result, 'status': 200 })
             }).catch(error => {
+                console.log(error);                
                 cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los dinerInputs", 'fields': error.fields }, 'status': 500 }, null);
             });
         }]
