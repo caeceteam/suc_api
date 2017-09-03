@@ -1,5 +1,6 @@
 var models = require('../models/');
 var sequelize = require('sequelize');
+var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var inputTypesModel = models.InputType;
 
@@ -33,7 +34,7 @@ var getInputType = function (idInputType, responseCB) {
 }
 
 var getAllInputTypes = function (req, responseCB) {
-    var whereClosure = {};
+    var whereClosure = sequelize.and ( queryHelper.buildQuery("InputType",req.query) ) ;
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;

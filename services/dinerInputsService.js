@@ -1,5 +1,6 @@
 var models = require('../models/');
-var Sequelize = require('sequelize');
+var sequelize = require('sequelize');
+var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var dinerInputsModel = models.DinerInput;
 
@@ -32,7 +33,7 @@ var getDinerInput = function (idDinerInput, responseCB) {
 }
 
 var getAllDinerInputs = function (idDiner, req, responseCB) {
-    var whereClosure = { idDiner: idDiner };
+    var whereClosure = sequelize.and ( queryHelper.buildQuery("DinerInput",req.query) ) ;
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;

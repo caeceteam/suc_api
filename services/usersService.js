@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 var sequelize = require('sequelize');
+var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var models = require('../models/');
 var usersModel = models.User;
@@ -33,7 +34,7 @@ var getUser = function (searchParam, responseCB) {
 }
 
 var getAllUsers = function (req, responseCB) {
-    var whereClosure = {};
+    var whereClosure = sequelize.and ( queryHelper.buildQuery("User",req.query) ) ;
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;

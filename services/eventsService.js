@@ -1,4 +1,6 @@
 var models = require('../models/');
+var sequelize = require('sequelize');
+var queryHelper = require('../helpers/queryHelper');
 var usersService = require('./usersService');
 var async = require('async');
 var eventsModel = models.Event;
@@ -35,7 +37,7 @@ var getEvent = function (idEvent, responseCB) {
 }
 
 var getAllEvents = function (idDiner, req, responseCB) {
-    var whereClosure = { idDiner: idDiner };
+    var whereClosure = sequelize.and ( queryHelper.buildQuery("Event",req.query) ) ;
 
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
