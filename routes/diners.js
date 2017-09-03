@@ -5,7 +5,7 @@ var dinersService = require('../services/dinersService')
 
 /* GET diners listing. */
 router.get('/:idDiner?', function (req, res, next) {
-    var idDiner = req.query.idDiner;
+    var idDiner = req.params.idDiner;
     if (idDiner) {
         dinersService.getDiner(idDiner, function (err, result) {
             if (!err) {
