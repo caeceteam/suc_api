@@ -4,6 +4,8 @@ var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var dinerInputsModel = models.DinerInput;
 
+models.DinerInput.hasOne(models.InputType, { foreignKey: 'idInputType' });
+
 var getDinerInput = function (idDinerInput, responseCB) {
     async.auto({
         // this function will just be passed a callback
@@ -18,7 +20,10 @@ var getDinerInput = function (idDinerInput, responseCB) {
                     // incorrect dinerInput
                     return callback({ 'body': {}, 'status': 404 }, null);
                 }
-                callback(null, { 'body': dinerInput, 'status': 200 });
+                dinerInput.getInputType().then(function (inputType) {
+                    callback(null, { 'body': { dinerInput: dinerInput, inputType: inputType }, 'status': 200 });
+                });
+
             }).catch(error => {
                 callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el dinerInput " + idDinerInput, 'fields': error.fields }, 'status': 500 }, null);
             });
@@ -33,7 +38,7 @@ var getDinerInput = function (idDinerInput, responseCB) {
 }
 
 var getAllDinerInputs = function (idDiner, req, responseCB) {
-    var whereClosure = sequelize.and ( queryHelper.buildQuery("DinerInput",req.query) ) ;
+    var whereClosure = sequelize.and(queryHelper.buildQuery("DinerInput", req.query));
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;
@@ -48,21 +53,38 @@ var getAllDinerInputs = function (idDiner, req, responseCB) {
             });
         },
         paginate: ['dinerInputsCount', function (results, cb) {
+            var promises = [];
             dinerInputsModel.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure }).then(function (dinerInputsCol) {
                 var total_pages = Math.ceil(results.dinerInputsCount / page_size);
                 var number_of_elements = dinerInputsCol.length;
-                var result = {
-                    dinerInputs: dinerInputsCol,
-                    pagination: {
-                        page: page,
-                        size: page_size,
-                        number_of_elements: number_of_elements,
-                        total_pages: total_pages,
-                        total_elements: results.dinerInputsCount
-                    }
-                };
-                cb(null, { 'body': result, 'status': 200 })
+                var dinerInputsWithTypes = [];
+                
+                for (var dinerInputIx in dinerInputsCol) {
+                    var dinerInput = dinerInputsCol[dinerInputIx];
+                    promises.push(dinerInput.getInputType().then(function (inputType) {
+                        var dinerInputJson = dinerInput.toJSON();
+                        if (inputType != undefined && inputType != null) {
+                            dinerInputJson.inputType = inputType.toJSON();
+                            dinerInputJson.idInputType = undefined;
+                        }
+                        dinerInputsWithTypes.push(dinerInputJson);
+                    }));
+                }
+                Promise.all(promises).then(function(values){
+                    var result = {
+                        dinerInputs: dinerInputsWithTypes,
+                        pagination: {
+                            page: page,
+                            size: page_size,
+                            number_of_elements: number_of_elements,
+                            total_pages: total_pages,
+                            total_elements: results.dinerInputsCount
+                        }
+                    };
+                    cb(null, { 'body': result, 'status': 200 })
+                });
             }).catch(error => {
+                console.log(error);
                 cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los dinerInputs", 'fields': error.fields }, 'status': 500 }, null);
             });
         }]
@@ -153,7 +175,7 @@ var deleteDinerInput = function (idDinerInput, responseCB) {
                     cb(dinerInputResponse);
                 }).catch(error => {
                     dinerInputResponse.status = 500;
-                    dinerInputResponse.fields = error.fields                                                            
+                    dinerInputResponse.fields = error.fields
                     dinerInputResponse.result = "Error eliminando el dinerInput " + idDinerInput;
                     cb(dinerInputResponse);
                 });
@@ -172,7 +194,7 @@ var deleteDinerInput = function (idDinerInput, responseCB) {
     });
 }
 
-var getDinerInputRequest = function(request){
+var getDinerInputRequest = function (request) {
     return {
         idDiner: request.idDiner,
         idInputType: request.idInputType,
@@ -188,7 +210,7 @@ module.exports = {
     getDinerInput: getDinerInput,
     getAllDinerInputs: getAllDinerInputs,
     createDinerInput: createDinerInput,
-    updateDinerInput:updateDinerInput,
+    updateDinerInput: updateDinerInput,
     deleteDinerInput: deleteDinerInput,
-    getDinerInputRequest:getDinerInputRequest
+    getDinerInputRequest: getDinerInputRequest
 };
