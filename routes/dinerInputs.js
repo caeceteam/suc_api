@@ -10,7 +10,11 @@ router.get('/:idDinerInput?', function (req, res, next) {
     if (idDinerInput) {
         dinerInputsService.getDinerInput(idDinerInput, function (err, result) {
             if (!err) {
-                res.status(result.status).json(result.body);
+                var dinerInputAndType = result.body;
+                var dinerInputJson = dinerInputAndType.dinerInput.toJSON();
+                dinerInputJson.idInputType = undefined;
+                dinerInputJson.inputType = dinerInputAndType.inputType.toJSON();
+                res.status(result.status).json(dinerInputJson);
             } else {
                 res.status(err.status).json(err.body);
             }
