@@ -21,6 +21,7 @@ var getInputType = function (idInputType, responseCB) {
                 }
                 callback(null, { 'body': inputType, 'status': 200 });
             }).catch(error => {
+                console.log(error);
                 callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el inputType " + idInputType, 'fields': error.fields }, 'status': 500 }, null);
             });
         }
