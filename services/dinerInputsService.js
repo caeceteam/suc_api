@@ -1,10 +1,11 @@
 var models = require('../models/');
 var sequelize = require('sequelize');
 var queryHelper = require('../helpers/queryHelper');
+var inputTypeService = require('./inputTypesService');
 var async = require('async');
 var dinerInputsModel = models.DinerInput;
 
-models.DinerInput.hasOne(models.InputType, { foreignKey: 'idInputType' });
+models.DinerInput.hasOne(models.InputType, { as: 'inputType', foreignKey: 'idInputType' });
 
 var getDinerInput = function (idDinerInput, responseCB) {
     async.auto({
@@ -20,17 +21,27 @@ var getDinerInput = function (idDinerInput, responseCB) {
                     // incorrect dinerInput
                     return callback({ 'body': {}, 'status': 404 }, null);
                 }
-                dinerInput.getInputType().then(function (inputType) {
-                    callback(null, { 'body': { dinerInput: dinerInput, inputType: inputType }, 'status': 200 });
-                });
-
+                callback(null, dinerInput);
             }).catch(error => {
+                console.log(error);
                 callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el dinerInput " + idDinerInput, 'fields': error.fields }, 'status': 500 }, null);
             });
-        }
+        },
+        findInputType: ['findDinerInput', function (results, cb) {
+            var dinerInput = results.findDinerInput;
+            inputTypeService.getInputType(dinerInput.idInputType, function (err, result) {
+                if (!err) {
+                    cb(null, result.body);
+                } else {
+                    cb(err, null);
+                }
+            });
+        }]
     }, function (err, results) {
+        console.log(results);
         if (!err) {
-            responseCB(null, results.findDinerInput);
+            var findDinerInputResult = { dinerInput: results.findDinerInput, inputType: results.findInputType };
+            responseCB(null, { 'body': findDinerInputResult, 'status': 200 });
         } else {
             responseCB(err, null);
         }
@@ -54,35 +65,22 @@ var getAllDinerInputs = function (idDiner, req, responseCB) {
         },
         paginate: ['dinerInputsCount', function (results, cb) {
             var promises = [];
-            dinerInputsModel.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure }).then(function (dinerInputsCol) {
+            dinerInputsModel.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure, include:[{model: models.InputType, as: 'inputType'}] }).then(function (dinerInputsCol) {
                 var total_pages = Math.ceil(results.dinerInputsCount / page_size);
                 var number_of_elements = dinerInputsCol.length;
-                var dinerInputsWithTypes = [];
-                
-                for (var dinerInputIx in dinerInputsCol) {
-                    var dinerInput = dinerInputsCol[dinerInputIx];
-                    promises.push(dinerInput.getInputType().then(function (inputType) {
-                        var dinerInputJson = dinerInput.toJSON();
-                        if (inputType != undefined && inputType != null) {
-                            dinerInputJson.inputType = inputType.toJSON();
-                            dinerInputJson.idInputType = undefined;
-                        }
-                        dinerInputsWithTypes.push(dinerInputJson);
-                    }));
-                }
-                Promise.all(promises).then(function(values){
-                    var result = {
-                        dinerInputs: dinerInputsWithTypes,
-                        pagination: {
-                            page: page,
-                            size: page_size,
-                            number_of_elements: number_of_elements,
-                            total_pages: total_pages,
-                            total_elements: results.dinerInputsCount
-                        }
-                    };
-                    cb(null, { 'body': result, 'status': 200 })
-                });
+
+                var result = {
+                    dinerInputs: dinerInputsCol,
+                    pagination: {
+                        page: page,
+                        size: page_size,
+                        number_of_elements: number_of_elements,
+                        total_pages: total_pages,
+                        total_elements: results.dinerInputsCount
+                    }
+                };
+                cb(null, { 'body': result, 'status': 200 })
+
             }).catch(error => {
                 console.log(error);
                 cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los dinerInputs", 'fields': error.fields }, 'status': 500 }, null);
@@ -154,7 +152,7 @@ var deleteDinerInput = function (idDinerInput, responseCB) {
         findDinerInput: function (callback) {
             getDinerInput(idDinerInput, function (err, result) {
                 if (!err) {
-                    callback(null, result.body);
+                    callback(null, result.body.dinerInput);
                 } else {
                     callback(err, null);
                 }
