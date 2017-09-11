@@ -108,6 +108,7 @@ var updateUser = function (searchParam, userRequest, responseCB) {
                         user.update(getUserRequest(userRequest, false)).then(function (updatedUser) {
                             callback(null, { 'body': updatedUser, 'status': 202 });
                         }).catch(error => {
+                            console.log(error);
                             callback({ 'body': { 'result': 'No se puedo actualizar el usuario', 'fields': error.fields }, 'status': 500 }, null);
                         });
                     } else {
@@ -191,7 +192,7 @@ var getUserRequest = function (request, shouldCreatePassword) {
         floor: request.floor,
         door: request.door,
         role: request.role,
-        docNumber: request.docNumber,
+        docNum: request.docNum,
         bornDate: request.bornDate,
         active: request.active
     };

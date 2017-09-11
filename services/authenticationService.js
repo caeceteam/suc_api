@@ -1,5 +1,6 @@
 var express = require('express');
 var jwt = require('jwt-simple')
+var models = require('../models/');
 var app = express();
 var moment = require('moment');
 var expires = moment().add(7, 'days').valueOf();
@@ -8,6 +9,12 @@ var async = require('async');
 const crypto = require('crypto');
 app.set('jwtTokenSecret', 'sucapi-2017_');
 var usersService = require('./usersService');
+
+var dinersModel = models.Diner;
+var usersModel = models.User;
+var usersDinersModel = models.UserDiner;
+dinersModel.belongsToMany(usersModel, { through: usersDinersModel, foreignKey: 'idDiner' });
+usersModel.belongsToMany(dinersModel, { through: usersDinersModel, foreignKey: 'idUser' });
 
 var authenticate = function (credentials, responseCB) {
     var userName = credentials.userName;
@@ -35,14 +42,22 @@ var authenticate = function (credentials, responseCB) {
                 cb(null, user);
             }
         }],
-        generateToken: ['validatePassword', function (results, callback) {
+        findDiners: ['validatePassword', function (results, cb) {
+            var user = results.findUser;
+            user.getDiners().then(function(diners){
+                cb(null, diners);
+            }).catch(error => {
+                cb({ 'body': { 'result': "Error en conseguir comedores del user" }, 'status': 500 }, null);
+            });
+        }],
+        generateToken: ['findDiners', function (results, callback) {
             var user = results.validatePassword;
             try {
                 var token = jwt.encode({
                     iss: user.idUser,
                     exp: expires
                 }, app.get('jwtTokenSecret'));
-                callback(null, { 'body': { 'token': token }, 'status': 200 });
+                callback(null, { 'body': { 'token': token, 'diners': results.findDiners }, 'status': 200 });
             } catch (exception) {
                 callback({ 'body': { 'result': "Error generando token" }, 'status': 500 }, null);
             }
