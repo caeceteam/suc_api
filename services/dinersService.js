@@ -1,4 +1,5 @@
 var sequelize = require('sequelize');
+var _ = require('lodash');
 var queryHelper = require('../helpers/queryHelper');
 var models = require('../models/');
 var usersService = require('./usersService');
@@ -192,6 +193,7 @@ var updateDiner = function (idDiner, requests, responseCB) {
     async.auto({
         // this function will just be passed a callback
         findDiner: function (callback) {
+            console.log("find Diner");
             getDiner(idDiner, function (err, result) {
                 if (!err) {
                     callback(null, result.body.diner);
@@ -201,13 +203,17 @@ var updateDiner = function (idDiner, requests, responseCB) {
             });
         },
         findUser: function (callback) {
-            usersService.getUser(userRequest.mail, function (err, result) {
-                if (!err) {
-                    callback(null, result.body);
-                } else {
-                    callback(err, null);
-                }
-            });
+            if(!_.isEmpty(userRequest)){
+                usersService.getUser(userRequest.mail, function (err, result) {
+                    if (!err) {
+                        callback(null, result.body);
+                    } else {
+                        callback(err, null);
+                    }
+                });
+            }else{
+                callback(null, undefined);                
+            }
         },
         updateDiner: ['findDiner', function (results, callback) {
             var diner = results.findDiner;
@@ -224,18 +230,21 @@ var updateDiner = function (idDiner, requests, responseCB) {
         }],
         updateUser: ['findUser', function (results, callback) {
             var user = results.findUser;
-            usersService.updateUser(userRequest.mail, userRequest, function (err, result) {
-                var updatedUser = result.body;
-                if (user) {
-                    usersDinersModel.upsert({ idUser: updatedUser.idUser, idDiner: idDiner, active: userRequest.active });
-                    var jsonUpdatedUser = updatedUser.toJSON();
-                    jsonUpdatedUser.active = userRequest.active;
-                    callback(null, jsonUpdatedUser);
-                } else {
-                    callback({ 'body': { 'result': 'No se puedo actualizar el usuario' }, 'status': 404 }, null);
-                }
-            });
-
+            if(user != undefined){
+                usersService.updateUser(userRequest.mail, userRequest, function (err, result) {
+                    var updatedUser = result.body;
+                    if (user) {
+                        usersDinersModel.upsert({ idUser: updatedUser.idUser, idDiner: idDiner, active: userRequest.active });
+                        var jsonUpdatedUser = updatedUser.toJSON();
+                        jsonUpdatedUser.active = userRequest.active;
+                        callback(null, jsonUpdatedUser);
+                    } else {
+                        callback({ 'body': { 'result': 'No se puedo actualizar el usuario' }, 'status': 404 }, null);
+                    }
+                });
+            }else{
+                callback(null, {});
+            }
         }]
     }, function (err, results) {
         console.log(results);
