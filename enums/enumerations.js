@@ -8,6 +8,12 @@ var enumerations = {
     userActive: {
         "false": 0,
         "true": 1
+    },
+    userRole: {
+        "sysAdmin" : 0,
+        "dinerAdmin" : 1,
+        "employee": 2,
+        "colaborator": 3
     }
 };
 
