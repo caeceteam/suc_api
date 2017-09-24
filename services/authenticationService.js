@@ -130,8 +130,55 @@ var updatePassword = function (credentials, newPassword, responseCB) {
     });
 }
 
+var cleanPassword = function (credentials, newPassword, responseCB) {
+    var userName = credentials.userName;
+    var newHash = crypto.createHash('sha256');
+
+    async.auto({
+        // this function will just be passed a callback
+        findUser: function (callback) {
+            usersService.getUser(userName, function (err, result) {
+                if (!err) {
+                    callback(null, result.body);
+                } else {
+                    callback(err, null);
+                }
+            });
+        },
+        updatePassword: ['findUser', function (result, callback) {
+            var user = result.findUser;
+            try {
+                user.pass = newHash.update(newPassword).digest("base64");
+                user.save();
+                callback(null, user);
+            } catch (exception) {
+                callback({ 'body': { 'result': "Error actualizando password" }, 'status': 500 }, null);
+            }
+        }],
+        generateToken: ['updatePassword', function (result, callback) {
+            var user = result.updatePassword;
+            try {
+                var token = jwt.encode({
+                    iss: user.idUser,
+                    exp: expires
+                }, app.get('jwtTokenSecret'));
+                callback(null, { 'body': { 'token': token }, 'status': 200 });
+            } catch (exception) {
+                callback({ 'body': { 'result': "Error generando token" }, 'status': 500 }, null);
+            }
+        }]
+    }, function (err, results) {
+        if (!err) {
+            responseCB(null, results.generateToken);
+        } else {
+            responseCB(err, null);
+        }
+    });
+}
+
 
 module.exports = {
     authenticate: authenticate,
-    updatePassword: updatePassword
+    updatePassword: updatePassword,
+    cleanPassword:cleanPassword
 };
