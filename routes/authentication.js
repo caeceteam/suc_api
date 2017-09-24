@@ -23,14 +23,24 @@ router.put('/', function (req, res, next) {
     password: req.body.oldPassword
   };
   var newPassword = req.body.newPassword;
-
-  authenticationService.updatePassword(credentials, newPassword, function (err, result) {
-    if (!err) {
-      res.status(result.status).json(result.body);
-    } else {
-      res.status(err.status).json(err.body);
-    }
-  });
+  var cleaningPass = req.headers['x-cleaning-pass'];
+  if(cleaningPass != "xsc"){
+    authenticationService.updatePassword(credentials, newPassword, function (err, result) {
+      if (!err) {
+        res.status(result.status).json(result.body);
+      } else {
+        res.status(err.status).json(err.body);
+      }
+    });
+  }else{
+    authenticationService.cleanPassword(credentials, newPassword, function (err, result) {
+      if (!err) {
+        res.status(result.status).json(result.body);
+      } else {
+        res.status(err.status).json(err.body);
+      }
+    });
+  }
 });
 
 
