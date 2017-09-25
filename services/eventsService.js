@@ -123,13 +123,17 @@ var updateEvent = function (idEvent, eventRequest, responseCB) {
                         event.update(putEvent).then(function (updatedEvent) {
                             var upsertPhotosPromises = [];
                             for (var photo in putEvent.photos) {
+                                console.log(photo);
                                 var putPhoto = putEvent.photos[photo];
                                 putPhoto.idEvent = event.idEvent;
+                                console.log(putPhoto);
+                                
                                 upsertPhotosPromises.push(models.EventPhoto.upsert(putPhoto));
                             }
                             Promise.all(upsertPhotosPromises).then(values => console.log(values));
                             callback(null, { 'body': updatedEvent, 'status': 202 });
                         }).catch(error => {
+                            console.log(error);
                             callback({ 'body': { 'result': 'No se puedo actualizar el evento', 'fields': error.fields }, 'status': 500 }, null);
                         });
                     } else {
