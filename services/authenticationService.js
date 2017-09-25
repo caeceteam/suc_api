@@ -57,7 +57,7 @@ var authenticate = function (credentials, responseCB) {
                     iss: user.idUser,
                     exp: expires
                 }, app.get('jwtTokenSecret'));
-                callback(null, { 'body': { 'token': token, 'diners': results.findDiners }, 'status': 200 });
+                callback(null, { 'body': { 'token': token, 'user':user , 'diners': results.findDiners }, 'status': 200 });
             } catch (exception) {
                 callback({ 'body': { 'result': "Error generando token" }, 'status': 500 }, null);
             }
@@ -162,7 +162,7 @@ var cleanPassword = function (credentials, newPassword, responseCB) {
                     iss: user.idUser,
                     exp: expires
                 }, app.get('jwtTokenSecret'));
-                callback(null, { 'body': { 'token': token }, 'status': 200 });
+                callback(null, { 'body': { 'token': token, 'user': user }, 'status': 200 });
             } catch (exception) {
                 callback({ 'body': { 'result': "Error generando token" }, 'status': 500 }, null);
             }
