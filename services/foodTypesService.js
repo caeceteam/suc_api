@@ -21,7 +21,6 @@ var getFoodType = function (idFoodType, responseCB) {
                 }
                 callback(null, { 'body': foodType, 'status': 200 });
             }).catch(error => {
-                console.log(error);
                 callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el foodType " + idFoodType, 'fields': error.fields }, 'status': 500 }, null);
             });
         }
