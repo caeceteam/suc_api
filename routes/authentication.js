@@ -4,8 +4,9 @@ var authenticationService = require('../services/authenticationService');
 
 /* Authenticate user and return token. */
 router.post('/', function (req, res, next) {
+  console.log(req.body);
   var credentials = {
-    userName: req.body.userName,
+    userName: req.body.userName || req.body.user_name,
     password: req.body.password
   };
   authenticationService.authenticate(credentials, function (err, result) {
