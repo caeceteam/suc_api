@@ -75,7 +75,7 @@ var getDiner = function (idDiner, responseCB) {
 }
 
 var getAllDiners = function (req, responseCB) {
-    var whereClosure =  sequelize.and ( queryHelper.buildQuery("Diner",req.query) ) ;
+    var whereClosure = sequelize.and(queryHelper.buildQuery("Diner", req.query));
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;
@@ -203,7 +203,7 @@ var updateDiner = function (idDiner, requests, responseCB) {
             });
         },
         findUser: function (callback) {
-            if(!_.isEmpty(userRequest)){
+            if (!_.isEmpty(userRequest)) {
                 usersService.getUser(userRequest.mail, function (err, result) {
                     if (!err) {
                         callback(null, result.body);
@@ -211,8 +211,8 @@ var updateDiner = function (idDiner, requests, responseCB) {
                         callback(err, null);
                     }
                 });
-            }else{
-                callback(null, undefined);                
+            } else {
+                callback(null, undefined);
             }
         },
         updateDiner: ['findDiner', function (results, callback) {
@@ -230,7 +230,7 @@ var updateDiner = function (idDiner, requests, responseCB) {
         }],
         updateUser: ['findUser', function (results, callback) {
             var user = results.findUser;
-            if(user != undefined){
+            if (user != undefined) {
                 usersService.updateUser(userRequest.mail, userRequest, function (err, result) {
                     var updatedUser = result.body;
                     if (user) {
@@ -242,15 +242,31 @@ var updateDiner = function (idDiner, requests, responseCB) {
                         callback({ 'body': { 'result': 'No se puedo actualizar el usuario' }, 'status': 404 }, null);
                     }
                 });
-            }else{
+            } else {
                 callback(null, {});
+            }
+        }],
+        updatePhotos: ['findDiner', function (results, callback) {
+            var diner = results.findDiner;
+            var upsertPhotosPromises = [];
+            var photos = [];
+            if (diner) {
+                for (var photo in dinerRequest.photos) {
+                    var putPhoto = dinerRequest.photos[photo];
+                    putPhoto.idDiner = diner.idDiner;
+                    photos.push(putPhoto);
+                    upsertPhotosPromises.push(models.DinerPhoto.upsert(putPhoto));
+                }
+                Promise.all(upsertPhotosPromises).then(values => {
+                    callback(null, photos);
+                });
             }
         }]
     }, function (err, results) {
-        console.log(results);
-        console.log(err);
         if (!err) {
-            responseCB(null, {"body": {diner: results.updateDiner, user: results.updateUser }, "status": 202 });
+            var dinerResponse = results.updateDiner.toJSON();
+            dinerResponse.photos = results.updatePhotos;
+            responseCB(null, { "body": { diner: dinerResponse, user: results.updateUser }, "status": 202 });
         } else {
             responseCB(err, null);
         }
