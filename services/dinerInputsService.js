@@ -5,7 +5,7 @@ var inputTypeService = require('./inputTypesService');
 var async = require('async');
 var dinerInputsModel = models.DinerInput;
 
-models.DinerInput.hasOne(models.InputType, { as: 'inputType', foreignKey: 'idInputType' });
+models.DinerInput.belongsTo(models.InputType, { as: 'inputType', foreignKey: 'idInputType' });
 
 var getDinerInput = function (idDinerInput, responseCB) {
     async.auto({

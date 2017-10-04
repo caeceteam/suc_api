@@ -4,8 +4,9 @@ var queryHelper = require('../helpers/queryHelper');
 var foodTypeService = require('./foodTypesService');
 var async = require('async');
 var dinerFoodsModel = models.DinerFood;
+var foodTypesModel = models.FoodType;
 
-models.DinerFood.hasOne(models.FoodType, { as: 'foodType', foreignKey: 'idFoodType' });
+models.DinerFood.belongsTo(foodTypesModel, { as: 'foodType', foreignKey: 'idFoodType' });
 
 var getDinerFood = function (idDinerFood, responseCB) {
     async.auto({
@@ -64,7 +65,15 @@ var getAllDinerFoods = function (idDiner, req, responseCB) {
         },
         paginate: ['dinerFoodsCount', function (results, cb) {
             var promises = [];
-            dinerFoodsModel.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure, include:[{model: models.FoodType, as: 'foodType'}] }).then(function (dinerFoodsCol) {
+            dinerFoodsModel.findAll({
+                offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure,
+                include: [
+                    {
+                        model:foodTypesModel,  
+                        as: 'foodType'
+                    }
+                ]
+            }).then(function (dinerFoodsCol) {
                 var total_pages = Math.ceil(results.dinerFoodsCount / page_size);
                 var number_of_elements = dinerFoodsCol.length;
 
