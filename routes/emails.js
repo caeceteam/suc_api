@@ -4,7 +4,7 @@ var app = express();
 var emailsService = require('../services/emailService')
 
 router.post('/', function (req, res, next) {
-    try{
+    try {
         switch (req.body.mail_type) {
             case 0:
                 emailsService.sendRegistration(req.body);
@@ -15,13 +15,16 @@ router.post('/', function (req, res, next) {
             case 2:
                 emailsService.sendRegistrationRejectedMail(req.body);
                 break;
+            case 3:
+                emailsService.sendNoValidatableRegistration(req.body);
+                break;
         };
 
         res.status(200).json({});
-    }catch(ex){
+    } catch (ex) {
         res.status(500).json({});
     }
-    
+
 });
 
 module.exports = router;
