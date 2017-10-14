@@ -38,6 +38,24 @@ var transporter = nodemailer.createTransport({
       
 }
 
+var sendNoValidatableRegistration = function(mailParams){
+  
+    
+    var mailOptions = {
+      from: 'suc@no-reply.com',
+      to: mailParams.destination_email,
+      subject: 'Gracias por sumarte a SUC',
+      template: 'no_validatable_registration',
+      context: {
+           user : mailParams.user,
+           password : mailParams.password,
+           url: mailParams.url
+      }
+    };
+    sendMail(mailOptions);
+    
+}
+
 var sendRegistrationApprovedMail = function(mailParams){
     
       
@@ -86,5 +104,6 @@ var sendMail = function(mailOptions){
 module.exports = {
     sendRegistration: sendRegistration,
     sendRegistrationApprovedMail: sendRegistrationApprovedMail,
-    sendRegistrationRejectedMail: sendRegistrationRejectedMail
+    sendRegistrationRejectedMail: sendRegistrationRejectedMail,
+    sendNoValidatableRegistration:sendNoValidatableRegistration
 };
