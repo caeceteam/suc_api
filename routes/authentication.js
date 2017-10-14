@@ -34,7 +34,7 @@ router.put('/', function (req, res, next) {
       }
     });
   }else{
-    authenticationService.cleanPassword(credentials, newPassword, function (err, result) {
+    authenticationService.cleanPassword(credentials, function (err, result) {
       if (!err) {
         res.status(result.status).json(result.body);
       } else {
