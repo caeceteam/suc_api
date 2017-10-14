@@ -9,6 +9,7 @@ var async = require('async');
 const crypto = require('crypto');
 app.set('jwtTokenSecret', 'sucapi-2017_');
 var usersService = require('./usersService');
+var emailService = require('./emailService');
 
 var dinersModel = models.Diner;
 var usersModel = models.User;
@@ -130,8 +131,9 @@ var updatePassword = function (credentials, newPassword, responseCB) {
     });
 }
 
-var cleanPassword = function (credentials, newPassword, responseCB) {
+var cleanPassword = function (credentials, responseCB) {
     var userName = credentials.userName;
+    var newPassword = generateRandomPass(8);
     var newHash = crypto.createHash('sha256');
 
     async.auto({
@@ -155,6 +157,10 @@ var cleanPassword = function (credentials, newPassword, responseCB) {
                 callback({ 'body': { 'result': "Error actualizando password" }, 'status': 500 }, null);
             }
         }],
+        sendMail: ['updatePassword', function(result, callback){
+            emailService.sendForgotPasswordMail({user_name: userName, new_password:newPassword});
+            callback(null, null);
+        }],
         generateToken: ['updatePassword', function (result, callback) {
             var user = result.updatePassword;
             try {
@@ -174,6 +180,12 @@ var cleanPassword = function (credentials, newPassword, responseCB) {
             responseCB(err, null);
         }
     });
+}
+
+function generateRandomPass(length){
+    return crypto.randomBytes(Math.ceil(length/2))
+    .toString('hex') // convert to hexadecimal format
+    .slice(0,length);
 }
 
 

@@ -1,4 +1,5 @@
 var nodemailer = require('nodemailer');
+var usersService = require('./usersService');
 var hbs = require('nodemailer-express-handlebars');
 
 var options = {
@@ -90,6 +91,26 @@ var sendRegistrationRejectedMail = function(mailParams){
       sendMail(mailOptions);
 }
 
+var sendForgotPasswordMail = function(mailParams){
+
+  var user = usersService.getUser(mailParams.user_name, function(err, result){
+    var mailOptions = {
+      from: 'suc@no-reply.com',
+      to: result.body.mail,
+      subject: 'Blanqueo de contraseña',
+      template: 'forgot_password',
+      context: {
+           user_name : mailParams.user_name,
+           new_password: mailParams.new_password
+      }
+    };
+    
+    sendMail(mailOptions);
+  });
+  
+  
+}
+
 var sendMail = function(mailOptions){
   transporter.use('compile', hbs(options));
   transporter.sendMail(mailOptions, function(error, info){
@@ -105,5 +126,6 @@ module.exports = {
     sendRegistration: sendRegistration,
     sendRegistrationApprovedMail: sendRegistrationApprovedMail,
     sendRegistrationRejectedMail: sendRegistrationRejectedMail,
-    sendNoValidatableRegistration:sendNoValidatableRegistration
+    sendNoValidatableRegistration:sendNoValidatableRegistration,
+    sendForgotPasswordMail: sendForgotPasswordMail
 };
