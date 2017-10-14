@@ -99,7 +99,7 @@ app.use('/api/enumerations', enumerations);
 app.use('/api/dinerPhotos', dinerPhotos);
 app.use('/api/assistants', assistants);
 app.use('/api/events', events);
-app.use('/api/emails', emails);
+app.use('/emails', emails);
 
 
 

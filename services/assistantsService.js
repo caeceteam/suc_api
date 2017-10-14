@@ -198,7 +198,7 @@ var deleteAssistant = function (idAssistant, responseCB) {
             });
         },
         deleteAssistant: ['findAssistant', function (results, cb) {
-            var assistant = results.findAssistant;
+            var assistant = results.findAssistant.assistant;
             var assistantResponse = {};
             if (assistant) {
                 assistant.destroy().then(function (result) {

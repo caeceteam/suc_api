@@ -30,7 +30,7 @@ var transporter = nodemailer.createTransport({
         subject: 'Solicitud de alta de comedor',
         template: 'registration',
         context: {
-             user : mailParams.user,
+             user : mailParams.user_name,
              password : mailParams.password,
              url: mailParams.url
         }
@@ -41,14 +41,14 @@ var transporter = nodemailer.createTransport({
 
 var sendNoValidatableRegistration = function(mailParams){
   
-    
+    console.log(mailParams);
     var mailOptions = {
       from: 'suc@no-reply.com',
       to: mailParams.destination_email,
       subject: 'Gracias por sumarte a SUC',
       template: 'no_validatable_registration',
       context: {
-           user : mailParams.user,
+           user : mailParams.user_name,
            password : mailParams.password,
            url: mailParams.url
       }
