@@ -3,6 +3,7 @@ var sequelize = require('sequelize');
 var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var models = require('../models/');
+var _ = require('lodash');
 var usersModel = models.User;
 
 var getUser = function (searchParam, responseCB) {
@@ -188,18 +189,25 @@ var getUserRequest = function (request, shouldCreatePassword) {
         mail: request.mail,
         phone: request.phone,
         street: request.street,
-        streetNumber: request.streetNumber,
+        streetNumber: request.streetNumber || request.street_number ,
         floor: request.floor,
         door: request.door,
         role: request.role,
-        docNum: request.docNum,
-        bornDate: request.bornDate,
+        docNum: request.docNum || request.doc_number,
+        bornDate: request.bornDate || request.born_date,
         active: request.active
     };
+
+    console.log(userRequest);
 
     if (shouldCreatePassword == true) {
         userRequest.pass = hash.update(password).digest("base64");
     }
+
+    userRequest = _.omitBy(userRequest, _.isUndefined);
+
+    console.log(userRequest);
+    
     return userRequest;
 };
 

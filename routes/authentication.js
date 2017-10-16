@@ -20,9 +20,11 @@ router.post('/', function (req, res, next) {
 
 router.put('/', function (req, res, next) {
   var credentials = {
-    userName: req.body.userName,
+    userName: req.body.userName || req.body.user_name,
     password: req.body.oldPassword
   };
+
+  console.log(req.body);
   var newPassword = req.body.newPassword;
   var cleaningPass = req.headers['x-cleaning-pass'];
   if(cleaningPass != "xsc"){
