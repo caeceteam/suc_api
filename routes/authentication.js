@@ -21,11 +21,11 @@ router.post('/', function (req, res, next) {
 router.put('/', function (req, res, next) {
   var credentials = {
     userName: req.body.userName || req.body.user_name,
-    password: req.body.oldPassword
+    password: req.body.oldPassword || req.body.old_password
   };
 
   console.log(req.body);
-  var newPassword = req.body.newPassword;
+  var newPassword = req.body.newPassword || req.body.new_password;
   var cleaningPass = req.headers['x-cleaning-pass'];
   if(cleaningPass != "xsc"){
     authenticationService.updatePassword(credentials, newPassword, function (err, result) {
