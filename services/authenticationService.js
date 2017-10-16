@@ -34,32 +34,26 @@ var authenticate = function (credentials, responseCB) {
             });
         },
         validatePassword: ['findUser', function (results, cb) {
-            var user = results.findUser;
+            var user = results.findUser.user;
             var hashedPass = hash.update(password).digest("base64");
             if (user.pass !== hashedPass) {
                 // incorrect password
                 cb({ 'body': { 'result': "La contraseña ingresada es invalida" }, 'status': 401 }, null);
             } else {
-                cb(null, user);
+                cb(null, results.findUser);
             }
         }],
-        findDiners: ['validatePassword', function (results, cb) {
-            var user = results.findUser;
-            user.getDiners().then(function(diners){
-                cb(null, diners);
-            }).catch(error => {
-                cb({ 'body': { 'result': "Error en conseguir comedores del user" }, 'status': 500 }, null);
-            });
-        }],
-        generateToken: ['findDiners', function (results, callback) {
-            var user = results.validatePassword;
+        generateToken: ['validatePassword', function (results, callback) {
+            var userAndDiner = results.validatePassword;
+            var user = userAndDiner.user;
             try {
                 var token = jwt.encode({
                     iss: user.idUser,
                     exp: expires
                 }, app.get('jwtTokenSecret'));
-                callback(null, { 'body': { 'token': token, 'user':user , 'diners': results.findDiners }, 'status': 200 });
+                callback(null, { 'body': { 'token': token, 'user':user , 'diners': userAndDiner.diners }, 'status': 200 });
             } catch (exception) {
+                console.log(exception);
                 callback({ 'body': { 'result': "Error generando token" }, 'status': 500 }, null);
             }
         }]
@@ -90,7 +84,7 @@ var updatePassword = function (credentials, newPassword, responseCB) {
             });
         },
         validatePassword: ['findUser', function (results, cb) {
-            var user = results.findUser;
+            var user = results.findUser.user;
             var hashedPass = oldHash.update(password).digest("base64");
             if (user.pass !== hashedPass) {
                 // incorrect password
@@ -148,7 +142,7 @@ var cleanPassword = function (credentials, responseCB) {
             });
         },
         updatePassword: ['findUser', function (result, callback) {
-            var user = result.findUser;
+            var user = result.findUser.user;
             try {
                 user.pass = newHash.update(newPassword).digest("base64");
                 user.save();
