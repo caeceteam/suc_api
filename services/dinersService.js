@@ -206,7 +206,7 @@ var updateDiner = function (idDiner, requests, responseCB) {
             if (!_.isEmpty(userRequest)) {
                 usersService.getUser(userRequest.mail, function (err, result) {
                     if (!err) {
-                        callback(null, result.body);
+                        callback(null, result.body.user);
                     } else {
                         callback(err, null);
                     }

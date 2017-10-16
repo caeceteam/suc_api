@@ -96,7 +96,7 @@ var sendForgotPasswordMail = function(mailParams){
   var user = usersService.getUser(mailParams.user_name, function(err, result){
     var mailOptions = {
       from: 'suc@no-reply.com',
-      to: result.body.mail,
+      to: result.body.user.mail,
       subject: 'Blanqueo de contraseña',
       template: 'forgot_password',
       context: {

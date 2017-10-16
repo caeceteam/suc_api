@@ -4,7 +4,12 @@ var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var models = require('../models/');
 var _ = require('lodash');
+var dinersModel = models.Diner;
 var usersModel = models.User;
+var usersDinersModel = models.UserDiner;
+dinersModel.belongsToMany(usersModel, { through: usersDinersModel, foreignKey: 'idDiner' });
+usersModel.belongsToMany(dinersModel, { through: usersDinersModel, foreignKey: 'idUser' });
+
 
 var getUser = function (searchParam, responseCB) {
     async.auto({
@@ -20,14 +25,26 @@ var getUser = function (searchParam, responseCB) {
                     // incorrect user
                     return callback({ 'body': {}, 'status': 404 }, null);
                 }
+
                 callback(null, { 'body': user, 'status': 200 });
+
             }).catch(error => {
+                console.log(error);
                 callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el user " + searchParam, 'fields': error.fields }, 'status': 500 }, null);
             });
-        }
+        },
+        findDiners: ['findUser', function (results, cb) {
+            var user = results.findUser.body;
+            user.getDiners().then(function (diners) {
+                cb(null, { body: { user: user, diners: diners }, status: results.findUser.status });
+            }).catch(error => {
+                console.log(error);
+                cb({ 'body': { 'result': "Error en conseguir comedores del user" }, 'status': 500 }, null);
+            });
+        }],
     }, function (err, results) {
         if (!err) {
-            responseCB(null, results.findUser);
+            responseCB(null, results.findDiners);
         } else {
             responseCB(err, null);
         }
@@ -35,7 +52,7 @@ var getUser = function (searchParam, responseCB) {
 }
 
 var getAllUsers = function (req, responseCB) {
-    var whereClosure = sequelize.and ( queryHelper.buildQuery("User",req.query) ) ;
+    var whereClosure = sequelize.and(queryHelper.buildQuery("User", req.query));
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;
@@ -104,7 +121,7 @@ var updateUser = function (searchParam, userRequest, responseCB) {
         updateUser: function (callback) {
             getUser(searchParam, function (err, result) {
                 if (!err) {
-                    var user = result.body;
+                    var user = result.body.user;
                     if (user) {
                         user.update(getUserRequest(userRequest, false)).then(function (updatedUser) {
                             callback(null, { 'body': updatedUser, 'status': 202 });
@@ -137,7 +154,7 @@ var deleteUser = function (idUser, responseCB) {
             var user;
             getUser(idUser, function (err, result) {
                 if (!err) {
-                    user = result.body;
+                    user = result.body.user;
                     callback(null, user);
                 } else {
                     callback(err, null);
@@ -189,7 +206,7 @@ var getUserRequest = function (request, shouldCreatePassword) {
         mail: request.mail,
         phone: request.phone,
         street: request.street,
-        streetNumber: request.streetNumber || request.street_number ,
+        streetNumber: request.streetNumber || request.street_number,
         floor: request.floor,
         door: request.door,
         role: request.role,
@@ -207,7 +224,7 @@ var getUserRequest = function (request, shouldCreatePassword) {
     userRequest = _.omitBy(userRequest, _.isUndefined);
 
     console.log(userRequest);
-    
+
     return userRequest;
 };
 
