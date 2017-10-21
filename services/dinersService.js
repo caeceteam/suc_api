@@ -83,7 +83,7 @@ var getAllDiners = function (req, responseCB) {
     async.auto({
         // this function will just be passed a callback
         dinersCount: function (callback) {
-            dinersModel.count().then(function (dinersQty) {
+            dinersModel.count({ where: whereClosure }).then(function (dinersQty) {
                 callback(null, dinersQty)
             }).catch(error => {
                 callback(error, null);

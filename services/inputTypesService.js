@@ -43,7 +43,7 @@ var getAllInputTypes = function (req, responseCB) {
     async.auto({
         // this function will just be passed a callback
         inputTypesCount: function (callback) {
-            inputTypesModel.count().then(function (inputTypesQty) {
+            inputTypesModel.count({ where: whereClosure }).then(function (inputTypesQty) {
                 callback(null, inputTypesQty)
             }).catch(error => {
                 callback(error, null);

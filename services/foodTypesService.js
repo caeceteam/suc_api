@@ -42,7 +42,7 @@ var getAllFoodTypes = function (req, responseCB) {
     async.auto({
         // this function will just be passed a callback
         foodTypesCount: function (callback) {
-            foodTypesModel.count().then(function (foodTypesQty) {
+            foodTypesModel.count({ where: whereClosure }).then(function (foodTypesQty) {
                 callback(null, foodTypesQty)
             }).catch(error => {
                 callback(error, null);

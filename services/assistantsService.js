@@ -66,7 +66,7 @@ var getAllAssistants = function (idDiner, req, responseCB) {
         },
         assistantsCount: ['findDiner', function (results, callback) {
             var dinerAssistantsResponse = {};
-            results.findDiner.getAssistants().then(function (assistants) {
+            results.findDiner.getAssistants({where: whereClosure}).then(function (assistants) {
                 dinerAssistantsResponse.diner = results.findDiner;
                 dinerAssistantsResponse.assistants = assistants;
                 dinerAssistantsResponse.qty = assistants.length;
