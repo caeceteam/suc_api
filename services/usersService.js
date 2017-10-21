@@ -60,7 +60,7 @@ var getAllUsers = function (req, responseCB) {
     async.auto({
         // this function will just be passed a callback
         usersCount: function (callback) {
-            usersModel.count().then(function (usersQty) {
+            usersModel.count({ where: whereClosure }).then(function (usersQty) {
                 callback(null, usersQty)
             }).catch(error => {
                 callback(error, null);
