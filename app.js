@@ -21,6 +21,7 @@ var enumerations = require('./routes/enumerations');
 var events = require('./routes/events');
 var emails = require('./routes/emails');
 var usersDiners = require('./routes/usersDiners');
+var dinerRequests = require('./routes/dinerRequests');
 
 var app = express();
 var apiRoutes = express.Router();
@@ -100,6 +101,8 @@ app.use('/api/dinerPhotos', dinerPhotos);
 app.use('/api/assistants', assistants);
 app.use('/api/events', events);
 app.use('/api/usersDiners', usersDiners);
+app.use('/api/dinerRequests', dinerRequests);
+
 app.use('/emails', emails);
 
 
