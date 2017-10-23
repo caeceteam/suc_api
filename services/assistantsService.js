@@ -1,5 +1,6 @@
 var models = require('../models/');
 var sequelize = require('sequelize');
+var _ = require('lodash');
 var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var dinersService = require('./dinersService');
@@ -232,7 +233,7 @@ var deleteAssistant = function (idAssistant, responseCB) {
 }
 
 var getAssistantRequest = function (request) {
-    return {
+    var assistantRequest = {
         idDiner: request.idDiner, //Lo usamos para agregar el asistente al comedor
         name: request.name,
         surname: request.surname,
@@ -254,6 +255,10 @@ var getAssistantRequest = function (request) {
         document: request.document,
         active: request.active
     };
+
+    assistantRequest = _.omitBy(assistantRequest, _.isUndefined);
+
+    return assistantRequest;
 }
 
 module.exports = {

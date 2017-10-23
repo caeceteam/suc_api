@@ -1,5 +1,6 @@
 var models = require('../models/');
 var sequelize = require('sequelize');
+var _ = require('lodash');
 var queryHelper = require('../helpers/queryHelper');
 var foodTypeService = require('./foodTypesService');
 var async = require('async');
@@ -202,7 +203,7 @@ var deleteDinerFood = function (idDinerFood, responseCB) {
 }
 
 var getDinerFoodRequest = function (request) {
-    return {
+    var dinerFoodRequest = {
         idDiner: request.idDiner,
         idFoodType: request.idFoodType,
         name: request.name,
@@ -213,6 +214,9 @@ var getDinerFoodRequest = function (request) {
         creationDate: request.creationDate,
         expirationDate: request.expirationDate
     };
+
+    dinerFoodRequest = _.omitBy(dinerFoodRequest, _.isUndefined);
+    return dinerFoodRequest;
 }
 
 module.exports = {

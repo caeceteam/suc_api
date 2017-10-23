@@ -1,5 +1,6 @@
 var models = require('../models/');
 var sequelize = require('sequelize');
+var _ = require('lodash');
 var queryHelper = require('../helpers/queryHelper');
 var usersService = require('./usersService');
 var async = require('async');
@@ -196,7 +197,7 @@ var deleteEvent = function (idEvent, responseCB) {
 }
 
 var getEventRequest = function (eventRequest) {
-    return {
+    var eventRequest = {
         name: eventRequest.name,
         street: eventRequest.street,
         streetNumber: eventRequest.streetNumber,
@@ -212,6 +213,9 @@ var getEventRequest = function (eventRequest) {
         idDiner: eventRequest.idDiner,
         photos: eventRequest.photos
     }
+
+    eventRequest = _.omitBy(eventRequest, _.isUndefined);
+    return eventRequest;    
 }
 module.exports = {
     getEventRequest: getEventRequest,

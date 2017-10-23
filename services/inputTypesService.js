@@ -1,5 +1,6 @@
 var models = require('../models/');
 var sequelize = require('sequelize');
+var _ = require('lodash');
 var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var inputTypesModel = models.InputType;
@@ -178,11 +179,14 @@ var deleteInputType = function (idInputType, responseCB) {
 }
 
 var getInputTypeRequest = function (request) {
-    return {
+    var inputTypeRequest = {
         code: request.code,
         name: request.name,
         description: request.description
     };
+
+    inputTypeRequest = _.omitBy(inputTypeRequest, _.isUndefined);
+    return inputTypeRequest;    
 };
 
 

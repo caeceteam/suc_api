@@ -1,5 +1,6 @@
 var models = require('../models/');
 var sequelize = require('sequelize');
+var _ = require('lodash');
 var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var userDinerModel = models.UserDiner;
@@ -136,11 +137,15 @@ var deleteUserDiner = function (idDiner,idUser, responseCB) {
 }
 
 var getUserDinerRequest = function (request) {
-    return {
+    var userDinerRequest = {
         idUser: request.idUser,
         idDiner: request.idDiner,
-        active: request.active
+        active: request.active,
+        isCollaborator: request.isCollaborator
     };
+
+    userDinerRequest = _.omitBy(userDinerRequest, _.isUndefined);
+    return userDinerRequest;    
 };
 
 
