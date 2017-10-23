@@ -1,5 +1,6 @@
 var models = require('../models/');
 var sequelize = require('sequelize');
+var _ = require('lodash');
 var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var foodTypesModel = models.FoodType;
@@ -177,7 +178,7 @@ var deleteFoodType = function (idFoodType, responseCB) {
 }
 
 var getFoodTypeRequest = function (request) {
-    return {
+    var foodTypeRequest = {
         code: request.code,
         name: request.name,
         description: request.description,
@@ -185,6 +186,9 @@ var getFoodTypeRequest = function (request) {
         diabetic: request.diabetic,
         celiac: request.celiac
     };
+
+    foodTypeRequest = _.omitBy(foodTypeRequest, _.isUndefined);
+    return foodTypeRequest;    
 };
 
 

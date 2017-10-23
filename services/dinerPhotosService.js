@@ -1,5 +1,6 @@
 var models = require('../models/');
 var sequelize = require('sequelize');
+var _ = require('lodash');
 var async = require('async');
 var dinerPhotosModel = models.DinerPhoto;
 
@@ -150,11 +151,14 @@ var deleteDinerPhoto = function (idDiner, idPhoto, responseCB) {
 }
 
 var getDinerPhotoRequest = function (request) {
-    return {
+    var dinerPhotoRequest = {
         idDiner: request.idDiner,
         idPhoto: request.idPhoto,
         url: request.url
     }
+
+    dinerPhotoRequest = _.omitBy(dinerPhotoRequest, _.isUndefined);
+    return dinerPhotoRequest;    
 }
 
 module.exports = {

@@ -1,5 +1,6 @@
 var models = require('../models/');
 var sequelize = require('sequelize');
+var _ = require('lodash');
 var queryHelper = require('../helpers/queryHelper');
 var inputTypeService = require('./inputTypesService');
 var async = require('async');
@@ -193,7 +194,7 @@ var deleteDinerInput = function (idDinerInput, responseCB) {
 }
 
 var getDinerInputRequest = function (request) {
-    return {
+    var dinerInputRequest = {
         idDiner: request.idDiner,
         idInputType: request.idInputType,
         name: request.name,
@@ -202,6 +203,9 @@ var getDinerInputRequest = function (request) {
         quantity: request.quantity,
         description: request.description
     };
+
+    dinerInputRequest = _.omitBy(dinerInputRequest, _.isUndefined);
+    return dinerInputRequest;    
 }
 
 module.exports = {

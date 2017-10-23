@@ -215,15 +215,11 @@ var getUserRequest = function (request, shouldCreatePassword) {
         active: request.active
     };
 
-    console.log(userRequest);
-
     if (shouldCreatePassword == true) {
         userRequest.pass = hash.update(password).digest("base64");
     }
 
     userRequest = _.omitBy(userRequest, _.isUndefined);
-
-    console.log(userRequest);
 
     return userRequest;
 };

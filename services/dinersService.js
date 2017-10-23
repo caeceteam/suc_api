@@ -351,7 +351,7 @@ var setDinerByIdAsInactive = function (idDiner, callback) {
 }
 
 var getDinerRequest = function (dinerRequest) {
-    return {
+    var dinerRequest = {
         name: dinerRequest.name,
         state: dinerRequest.state,
         street: dinerRequest.street,
@@ -367,6 +367,9 @@ var getDinerRequest = function (dinerRequest) {
         mail: dinerRequest.mail,
         photos: dinerRequest.photos
     }
+
+    dinerRequest = _.omitBy(dinerRequest, _.isUndefined);
+    return dinerRequest;    
 }
 module.exports = {
     getAllDiners: getAllDiners,
