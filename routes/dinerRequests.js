@@ -3,7 +3,7 @@ var router = express.Router();
 var app = express();
 var dinerRequestsService = require('../services/dinerRequestsService');
 
-/* GET food listing. */
+/* GET dinerRequest listing. */
 router.get('/:idDinerRequest?', function (req, res, next) {
     var idDinerRequest = req.params.idDinerRequest;
     if (idDinerRequest) {
@@ -25,7 +25,7 @@ router.get('/:idDinerRequest?', function (req, res, next) {
     }
 });
 
-/* POST de food. */
+/* POST de dinerRequest. */
 router.post('/', function (req, res, next) {
     var dinerRequestRequest = req.body;
     dinerRequestsService.createDinerRequest(dinerRequestRequest, function (err, result) {
