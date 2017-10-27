@@ -61,8 +61,9 @@ router.post('/', function (req, res, next) {
 });
 
 /* POST de donation. */
-router.post('/items', function (req, res, next) {
+router.post('/:idDonation/items', function (req, res, next) {
     var donationItemRequest = req.body;
+    donationItemRequest.idDonation = req.params.idDonation;
     donationsService.createDonationItem(donationItemRequest, function (err, result) {
         if (!err) {
             res.status(result.status).json(result.body);
@@ -72,6 +73,16 @@ router.post('/items', function (req, res, next) {
     });
 });
 
+router.put('/:idDonation/', function (req, res, next) {
+    var idDonation = req.params.idDonation;
+    donationsService.updateDonation(idDonation, req.body, function (err, result) {
+        if (!err) {
+            res.status(result.status).json(result.body);
+        } else {
+            res.status(err.status).json(err.body);
+        }
+    });
+});
 
 router.put('/:idDonation/items/:idDonationItem', function (req, res, next) {
     var idDonation = req.params.idDonation;
@@ -85,10 +96,21 @@ router.put('/:idDonation/items/:idDonationItem', function (req, res, next) {
     });
 });
 
+router.delete('/:idDonation/', function (req, res, next) {
+    var idDonation = req.params.idDonation;
+    donationsService.deleteDonation(idDonation, function (err, result) {
+        if (!err) {
+            res.status(result.status).json(result.body);
+        } else {
+            res.status(err.status).json(err.body);
+        }
+    });
+});
+
 router.delete('/:idDonation/items/:idDonationItem', function (req, res, next) {
     var idDonation = req.params.idDonation;
     var idDonationItem = req.params.idDonationItem;
-    donationsService.deleteDonation(idDonation,idDonationItem, function (err, result) {
+    donationsService.deleteDonationItem(idDonation,idDonationItem, function (err, result) {
         if (!err) {
             res.status(result.status).json(result.body);
         } else {

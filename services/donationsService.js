@@ -6,13 +6,12 @@ var _ = require('lodash');
 var donationsModel = models.Donation;
 var donationItemsModel = models.DonationItem;
 
-donationsModel.hasMany(donationItemsModel, { as: 'items', foreignKey: 'idDonation' });
-
+donationsModel.hasMany(donationItemsModel, {as: 'items', foreignKey: 'idDonation'})
 var getDonation = function (idDonation, responseCB) {
     async.auto({
         // this function will just be passed a callback
         findDonation: function (callback) {
-            donationsModel.find({ where: { idDonation: idDonation }}).then(function (donation, err) {
+            donationsModel.find({ where: { idDonation: idDonation }, include:[{model:donationItemsModel, as: 'items'}]}).then(function (donation, err) {
                 if (err) {
                     // donation not found 
                     return callback({ 'body': {}, 'status': 401 }, null);
@@ -51,9 +50,9 @@ var getDonationItem = function (idDonation, idDonationItem, responseCB) {
         },
         findItem: ['findDonation', function(results, callback){
             var donation = results.findDonation;
-            donation.getDonationItems({where:{idDonationItem: idDonationItem}}).then(function(donationItem){
-                if(donationItem){
-                    callback(null, { 'body': donationItem, 'status': 200 });
+            donation.getItems({where:{idDonationItem: idDonationItem}}).then(function(donationItem){
+                if(donationItem.length == 1){
+                    callback(null, { 'body': donationItem[0], 'status': 200 });
                 }else{
                     callback({ 'body': {'result': "no se encontro el donationItem " + idDonationItem}, 'status': 404 },null)
                 }
@@ -192,44 +191,64 @@ var getAllDonationItemsByDonation = function (idDonation, req, responseCB) {
     });
 }
 
-var createDinerRequest = function (dinerRequestRequest, responseCB) {
+var createDonation = function (donationRequest, responseCB) {
     async.auto({
         // this function will just be passed a callback
-        createDinerRequest: function (cb) {
-            var postDinerRequest = getDinerRequestRequest(dinerRequestRequest);
-            postDinerRequest.creationDate = new Date();
-            postDinerRequest.status = 0;
-            dinerRequestModel.create(postDinerRequest).then(function (dinerRequest) {
-                cb(null, { 'body': dinerRequest, 'status': 201 });
+        createDonation: function (cb) {
+            var postDonation = getDonationRequest(donationRequest);
+            postDonation.creationDate = new Date();
+            postDonation.status = 0;
+            donationsModel.create(postDonation).then(function (donation) {
+                cb(null, { 'body': donation, 'status': 201 });
             }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error creando el dinerRequest", 'fields': error.fields }, 'status': 500 }, null);
+                cb({ 'body': { 'result': "Ha ocurrido un error creando el donation", 'fields': error.fields }, 'status': 500 }, null);
             });
         }
     }, function (err, results) {
         if (!err) {
-            responseCB(null, results.createDinerRequest);
+            responseCB(null, results.createDonation);
         } else {
             responseCB(err, null);
         }
     });
 }
 
-var updateDinerRequest = function (idDinerRequest, dinerRequestRequest, responseCB) {
+var createDonationItem = function (donationItemRequest, responseCB) {
     async.auto({
         // this function will just be passed a callback
-        updateDinerRequest: function (callback) {
-            getDinerRequest(idDinerRequest, function (err, result) {
+        createDonationItem: function (cb) {
+            var postDonationItem = getDonationItemRequest(donationItemRequest);
+            donationItemsModel.create(postDonationItem).then(function (donationItem) {
+                cb(null, { 'body': donationItem, 'status': 201 });
+            }).catch(error => {
+                console.log(error);
+                cb({ 'body': { 'result': "Ha ocurrido un error creando el donationItem", 'fields': error.fields }, 'status': 500 }, null);
+            });
+        }
+    }, function (err, results) {
+        if (!err) {
+            responseCB(null, results.createDonationItem);
+        } else {
+            responseCB(err, null);
+        }
+    });
+}
+
+var updateDonation = function (idDonation, donationRequest, responseCB) {
+    async.auto({
+        // this function will just be passed a callback
+        updateDonation: function (callback) {
+            getDonation(idDonation, function (err, result) {
                 if (!err) {
-                    var dinerRequest = result.body;
-                    if (dinerRequest) {
-                        console.log(dinerRequest);
-                        dinerRequest.update(getDinerRequestRequest(dinerRequestRequest)).then(function (updatedDinerRequest) {
-                            callback(null, { 'body': updatedDinerRequest, 'status': 202 });
+                    var donation = result.body;
+                    if (donation) {
+                        donation.update(getDonationRequest(donationRequest)).then(function (updatedDonation) {
+                            callback(null, { 'body': updatedDonation, 'status': 202 });
                         }).catch(error => {
-                            callback({ 'body': { 'result': 'No se puedo actualizar el dinerRequest', 'fields': error.fields }, 'status': 500 }, null);
+                            callback({ 'body': { 'result': 'No se puedo actualizar la donation', 'fields': error.fields }, 'status': 500 }, null);
                         });
                     } else {
-                        callback({ 'body': { 'result': 'No se puedo actualizar el dinerRequest' }, 'status': 404 }, null);
+                        callback({ 'body': { 'result': 'No se puedo actualizar la donation' }, 'status': 404 }, null);
                     }
                 } else {
                     callback(err, null);
@@ -238,7 +257,7 @@ var updateDinerRequest = function (idDinerRequest, dinerRequestRequest, response
         }
     }, function (err, results) {
         if (!err) {
-            responseCB(null, results.updateDinerRequest);
+            responseCB(null, results.updateDonation);
         } else {
             responseCB(err, null);
         }
@@ -246,11 +265,42 @@ var updateDinerRequest = function (idDinerRequest, dinerRequestRequest, response
 
 }
 
-var deleteDinerRequest = function (idDinerRequest, responseCB) {
+var updateDonationItem = function (idDonation,idDonationItem, donationItemRequest, responseCB) {
     async.auto({
         // this function will just be passed a callback
-        findDinerRequest: function (callback) {
-            getDinerRequest(idDinerRequest, function (err, result) {
+        updateDonationItem: function (callback) {
+            getDonationItem(idDonation,idDonationItem, function (err, result) {
+                if (!err) {
+                    var donationItem = result.body;
+                    if (donationItem) {
+                        donationItem.update(getDonationItemRequest(donationItemRequest)).then(function (updatedDonationItem) {
+                            callback(null, { 'body': updatedDonationItem, 'status': 202 });
+                        }).catch(error => {
+                            callback({ 'body': { 'result': 'No se puedo actualizar el donationItem', 'fields': error.fields }, 'status': 500 }, null);
+                        });
+                    } else {
+                        callback({ 'body': { 'result': 'No se puedo actualizar el donationItem' }, 'status': 404 }, null);
+                    }
+                } else {
+                    callback(err, null);
+                }
+            });
+        }
+    }, function (err, results) {
+        if (!err) {
+            responseCB(null, results.updateDonationItem);
+        } else {
+            responseCB(err, null);
+        }
+    });
+
+}
+
+var deleteDonation = function (idDonation, responseCB) {
+    async.auto({
+        // this function will just be passed a callback
+        findDonation: function (callback) {
+            getDonation(idDonation, function (err, result) {
                 if (!err) {
                     callback(null, result.body);
                 } else {
@@ -258,53 +308,117 @@ var deleteDinerRequest = function (idDinerRequest, responseCB) {
                 }
             });
         },
-        deleteDinerRequest: ['findDinerRequest', function (results, cb) {
-            var dinerRequest = results.findDinerRequest;
-            var dinerRequestResponse = {};
-            if (dinerRequest) {
-                dinerRequest.destroy().then(function (result) {
+        deleteDonation: ['findDonation', function (results, cb) {
+            var donation = results.findDonation;
+            var donationResponse = {};
+            if (donation) {
+                donation.destroy().then(function (result) {
                     if (result == 1) {
-                        dinerRequestResponse.status = 200;
-                        dinerRequestResponse.result = "Se ha borrado el dinerRequest " + idDinerRequest;
+                        donationResponse.status = 200;
+                        donationResponse.result = "Se ha borrado la donation " + idDonation;
                     } else {
-                        dinerRequestResponse.status = 204;
-                        dinerRequestResponse.result = "No se ha podido borrar el dinerRequest " + idDinerRequest;
+                        donationResponse.status = 204;
+                        donationResponse.result = "No se ha podido borrar la donation " + idDonation;
                     }
-                    cb(dinerRequestResponse);
+                    cb(donationResponse);
                 }).catch(error => {
-                    dinerRequestResponse.status = 500;
-                    dinerRequestResponse.fields = error.fields
-                    dinerRequestResponse.result = "Error eliminando el dinerRequest " + idDinerRequest;
-                    cb(dinerRequestResponse);
+                    console.log(error);
+                    donationResponse.status = 500;
+                    donationResponse.fields = error.fields
+                    donationResponse.result = "Error eliminando la donation " + idDonation;
+                    cb(donationResponse);
                 });
             } else {
-                dinerRequestResponse.status = 404;
-                dinerRequestResponse.result = "No se encontro el dinerRequest " + idDinerRequest;
-                cb(dinerRequestResponse);
+                donationResponse.status = 404;
+                donationResponse.result = "No se encontro la donation " + idDonation;
+                cb(donationResponse);
             }
         }]
     }, function (err, results) {
         if (!err) {
-            responseCB(null, results.deleteDinerRequest);
+            responseCB(null, results.deleteDonation);
         } else {
             responseCB(err, null);
         }
     });
 }
 
-var getDinerRequestRequest = function (request) {
-    var dinerRequest = {
-        idDinerRequest: request.idDinerRequest,
-        idDiner: request.idDiner,
+var deleteDonationItem = function (idDonation,idDonationItem, responseCB) {
+    async.auto({
+        // this function will just be passed a callback
+        findDonationItem: function (callback) {
+            getDonationItem(idDonation,idDonationItem, function (err, result) {
+                if (!err) {
+                    callback(null, result.body);
+                } else {
+                    callback(err, null);
+                }
+            });
+        },
+        deleteDonationItem: ['findDonationItem', function (results, cb) {
+            var donationItem = results.findDonationItem;
+            var donationItemResponse = {};
+            if (donationItem) {
+                donationItem.destroy().then(function (result) {
+                    if (result == 1) {
+                        donationItemResponse.status = 200;
+                        donationItemResponse.result = "Se ha borrado el donationItem " + idDonationItem;
+                    } else {
+                        donationItemResponse.status = 204;
+                        donationItemResponse.result = "No se ha podido borrar el donationItem " + idDonationItem;
+                    }
+                    cb(donationItemResponse);
+                }).catch(error => {
+                    donationItemResponse.status = 500;
+                    donationItemResponse.fields = error.fields
+                    donationItemResponse.result = "Error eliminando el donationItem " + idDonationItem;
+                    cb(donationItemResponse);
+                });
+            } else {
+                donationItemResponse.status = 404;
+                donationItemResponse.result = "No se encontro el donationItem " + idDonationItem;
+                cb(donationItemResponse);
+            }
+        }]
+    }, function (err, results) {
+        if (!err) {
+            responseCB(null, results.deleteDonationItem);
+        } else {
+            responseCB(err, null);
+        }
+    });
+}
+
+var getDonationRequest = function (request) {
+    var donationRequest = {
+        idDonation: request.idDonation,
+        idUserSender: request.idUserSender,
+        idDinerReceiver: request.idDinerReceiver,
         title: request.title,
         description: request.description,
         creationDate: request.creationDate,
         status: request.status
     };
 
-    dinerRequest = _.omitBy(dinerRequest, _.isUndefined);
+    donationRequest = _.omitBy(donationRequest, _.isUndefined);
 
-    return dinerRequest;
+    return donationRequest;
+}
+
+var getDonationItemRequest = function (request) {
+    var donationItemRequest = {
+        idDonationItem: request.idDonationItem,        
+        idDonation: request.idDonation,
+        foodType: request.foodType,
+        inputType: request.inputType,
+        unit: request.unit,
+        quantity: request.quantity,
+        description: request.description
+    };
+
+    donationItemRequest = _.omitBy(donationItemRequest, _.isUndefined);
+
+    return donationItemRequest;
 }
 
 module.exports = {
@@ -312,8 +426,12 @@ module.exports = {
     getDonationItem: getDonationItem,
     getAllDonations: getAllDonations,
     getAllDonationItemsByDonation: getAllDonationItemsByDonation,
-    createDinerRequest: createDinerRequest,
-    updateDinerRequest: updateDinerRequest,
-    deleteDinerRequest: deleteDinerRequest,
-    getDinerRequestRequest: getDinerRequestRequest
+    createDonation: createDonation,
+    createDonationItem: createDonationItem,
+    getDonationRequest: getDonationRequest,
+    getDonationItemRequest: getDonationItemRequest,
+    updateDonation: updateDonation,
+    updateDonationItem: updateDonationItem,
+    deleteDonation: deleteDonation,
+    deleteDonationItem: deleteDonationItem
 };
