@@ -16,7 +16,6 @@ router.get('/:idDiner?', function (req, res, next) {
         });
     } else {
         var geolocatable = req.headers['x-geo-enabled'];
-        console.log(geolocatable);
         if(geolocatable === "true"){
             dinersService.getAllDinersWithGeo(req, function (err, result) {
                 if (!err) {

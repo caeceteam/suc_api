@@ -79,7 +79,6 @@ var getAllDiners = function (req, responseCB) {
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;
-console.log("without geo");
     async.auto({
         // this function will just be passed a callback
         dinersCount: function (callback) {
