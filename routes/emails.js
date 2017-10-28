@@ -7,21 +7,28 @@ router.post('/', function (req, res, next) {
     try {
         switch (req.body.mail_type) {
             case 0:
-                emailsService.sendRegistration(req.body);
+                result = emailsService.sendRegistration(req.body, function (response) {
+                    res.status(response.status).json(response.result);
+                });
                 break;
             case 1:
-                emailsService.sendRegistrationApprovedMail(req.body);
+                result = emailsService.sendRegistrationApprovedMail(req.body, function (response) {
+                    res.status(response.status).json(response.result);
+                });
                 break;
             case 2:
-                emailsService.sendRegistrationRejectedMail(req.body);
+                result = emailsService.sendRegistrationRejectedMail(req.body, function (response) {
+                    res.status(response.status).json(response.result);
+                });
                 break;
             case 3:
-                emailsService.sendNoValidatableRegistration(req.body);
+                result = emailsService.sendNoValidatableRegistration(req.body, function (response) {
+                    res.status(response.status).json(response.result);
+                });
                 break;
         };
-
-        res.status(200).json({});
     } catch (ex) {
+        console.log(ex);
         res.status(500).json({});
     }
 
