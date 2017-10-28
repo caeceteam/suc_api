@@ -79,7 +79,6 @@ var getAllDiners = function (req, responseCB) {
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;
-
     async.auto({
         // this function will just be passed a callback
         dinersCount: function (callback) {
@@ -111,6 +110,50 @@ var getAllDiners = function (req, responseCB) {
     }, function (err, results) {
         if (!err) {
             responseCB(null, results.paginate);
+        } else {
+            responseCB(err, null);
+        }
+    });
+}
+
+var getAllDinersWithGeo = function (req, responseCB) {
+    async.auto({
+        // this function will just be passed a callback
+        buildQuery: function (callback) {
+            try{
+                var lat = parseFloat(req.query.latitude);
+                var lng = parseFloat(req.query.longitude);
+                var maxDistance = req.query.maxDistance || req.query.max_distance || 10;
+                var maxResults = req.query.maxResults || req.query.max_results || 10;
+                var attributes = Object.keys(models.Diner.attributes);
+                var location = sequelize.literal(`ST_GeomFromText('POINT(${lat} ${lng})')`);
+                var distance = sequelize.literal("6371 * acos(cos(radians("+lat+")) * cos(radians(latitude)) * cos(radians("+lng+") - radians(longitude)) + sin(radians("+lat+")) * sin(radians(latitude)))",'distance');
+                attributes.push([distance,'distance']);
+            
+                var query = {
+                    attributes: attributes,
+                    order: sequelize.col('distance'),
+                    where: sequelize.where(distance, {$lte: maxDistance}),
+                  limit: Math.ceil(maxDistance),
+                  logging: console.log
+                }
+
+                callback(null, query);
+            }catch(ex){
+                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo los diners"}, 'status': 500 })
+            }
+        },
+        findAll: ['buildQuery', function (results, cb) {
+            dinersModel.findAll(results.buildQuery).then(function(diners){
+                cb(null, { 'body': { 'diners': diners}, 'status': 200 });
+            }).catch(error => {
+                console.log(error);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los diners"}, 'status': 500 })                
+            });
+        }]
+    }, function (err, results) {
+        if (!err) {
+            responseCB(null, results.findAll);
         } else {
             responseCB(err, null);
         }
@@ -373,6 +416,7 @@ var getDinerRequest = function (dinerRequest) {
 }
 module.exports = {
     getAllDiners: getAllDiners,
+    getAllDinersWithGeo: getAllDinersWithGeo,
     getDiner: getDiner,
     createDiner: createDiner,
     updateDiner: updateDiner,
