@@ -81,6 +81,50 @@ var getAllEvents = function (idDiner, req, responseCB) {
     });
 }
 
+var getAllEventsWithGeo = function (req, responseCB) {
+    async.auto({
+        // this function will just be passed a callback
+        buildQuery: function (callback) {
+            try{
+                var lat = parseFloat(req.query.latitude);
+                var lng = parseFloat(req.query.longitude);
+                var maxDistance = req.query.maxDistance || req.query.max_distance || 10;
+                var maxResults = req.query.maxResults || req.query.max_results || 10;
+                var attributes = Object.keys(models.Event.attributes);
+                var location = sequelize.literal(`ST_GeomFromText('POINT(${lat} ${lng})')`);
+                var distance = sequelize.literal("6371 * acos(cos(radians("+lat+")) * cos(radians(latitude)) * cos(radians("+lng+") - radians(longitude)) + sin(radians("+lat+")) * sin(radians(latitude)))",'distance');
+                attributes.push([distance,'distance']);
+            
+                var query = {
+                    attributes: attributes,
+                    order: sequelize.col('distance'),
+                    where: sequelize.where(distance, {$lte: maxDistance}),
+                  limit: Math.ceil(maxDistance),
+                  logging: console.log
+                }
+
+                callback(null, query);
+            }catch(ex){
+                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo los events"}, 'status': 500 })
+            }
+        },
+        findAll: ['buildQuery', function (results, cb) {
+            eventsModel.findAll(results.buildQuery).then(function(events){
+                cb(null, { 'body': { 'events': events}, 'status': 200 });
+            }).catch(error => {
+                console.log(error);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los events"}, 'status': 500 })                
+            });
+        }]
+    }, function (err, results) {
+        if (!err) {
+            responseCB(null, results.findAll);
+        } else {
+            responseCB(err, null);
+        }
+    });
+}
+
 var createEvent = function (eventRequest, responseCB) {
     async.auto({
         // this function will just be passed a callback
@@ -221,6 +265,7 @@ module.exports = {
     getEventRequest: getEventRequest,
     getEvent: getEvent,
     getAllEvents: getAllEvents,
+    getAllEventsWithGeo: getAllEventsWithGeo,
     createEvent: createEvent,
     updateEvent: updateEvent,
     deleteEvent: deleteEvent
