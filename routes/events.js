@@ -16,13 +16,24 @@ router.get('/:idEvent?', function (req, res, next) {
         });
     } else {
         var idDiner = req.query.idDiner;
-        eventsService.getAllEvents(idDiner,req, function (err, result) {
-            if (!err) {
-                res.status(result.status).json(result.body);
-            } else {
-                res.status(err.status).json(err.body);
-            }
-        });
+        var geolocatable = req.headers['x-geo-enabled'];
+        if(geolocatable === "true"){
+            eventsService.getAllEventsWithGeo(req, function (err, result) {
+                if (!err) {
+                    res.status(result.status).json(result.body);
+                } else {
+                    res.status(err.status).json(err.body);
+                }
+            });
+        }else{
+            eventsService.getAllEvents(idDiner,req, function (err, result) {
+                if (!err) {
+                    res.status(result.status).json(result.body);
+                } else {
+                    res.status(err.status).json(err.body);
+                }
+            });
+        }
     }
 });
 
