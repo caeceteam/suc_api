@@ -13,7 +13,7 @@ var getEvent = function (idEvent, responseCB) {
     async.auto({
         // this function will just be passed a callback
         findEvent: function (callback) {
-            eventsModel.find({ where: { idEvent: idEvent } }).then(function (event, err) {
+            eventsModel.find({ where: { idEvent: idEvent }, include:[{model:eventsPhotoModel, as: 'photos'}] }).then(function (event, err) {
                 if (err) {
                     // diner not found 
                     return callback({ 'body': {}, 'status': 401 }, null);
