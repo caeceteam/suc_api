@@ -3,7 +3,9 @@ var sequelize = require('sequelize');
 var _ = require('lodash');
 var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
+var usersModel = models.User;
 var userDinerModel = models.UserDiner;
+userDinerModel.belongsTo(usersModel, { as: 'user', foreignKey: 'idUser' });
 
 var getUsersDiners = function (req, responseCB) {
     var whereClosure = sequelize.and ( queryHelper.buildQuery("UserDiner",req.query) ) ;
@@ -17,11 +19,12 @@ var getUsersDiners = function (req, responseCB) {
             userDinerModel.count({where: whereClosure}).then(function (userDinerQty) {
                 callback(null, userDinerQty)
             }).catch(error => {
+                console.log(error);
                 callback(error, null);
             });
         },
         paginate: ['usersDinersCount', function (results, cb) {
-            userDinerModel.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure }).then(function (usersDinersCol) {
+            userDinerModel.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure , include:[{model: usersModel, as: 'user'}]}).then(function (usersDinersCol) {
                 var total_pages = Math.ceil(results.usersDinersCount / page_size);
                 var number_of_elements = usersDinersCol.length;
                 var result = {
@@ -36,6 +39,7 @@ var getUsersDiners = function (req, responseCB) {
                 };
                 cb(null, { 'body': result, 'status': 200 })
             }).catch(error => {
+                console.log(error);                
                 cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los userDiner", 'fields': error.fields }, 'status': 500 }, null);
             });
         }]
