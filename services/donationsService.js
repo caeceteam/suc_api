@@ -6,12 +6,12 @@ var _ = require('lodash');
 var donationsModel = models.Donation;
 var donationItemsModel = models.DonationItem;
 
-donationsModel.hasMany(donationItemsModel, {as: 'items', foreignKey: 'idDonation'})
+donationsModel.hasMany(donationItemsModel, { as: 'items', foreignKey: 'idDonation' })
 var getDonation = function (idDonation, responseCB) {
     async.auto({
         // this function will just be passed a callback
         findDonation: function (callback) {
-            donationsModel.find({ where: { idDonation: idDonation }, include:[{model:donationItemsModel, as: 'items'}]}).then(function (donation, err) {
+            donationsModel.find({ where: { idDonation: idDonation }, include: [{ model: donationItemsModel, as: 'items' }] }).then(function (donation, err) {
                 if (err) {
                     // donation not found 
                     return callback({ 'body': {}, 'status': 401 }, null);
@@ -44,17 +44,17 @@ var getDonationItem = function (idDonation, idDonationItem, responseCB) {
                 if (!err) {
                     callback(null, result.body)
                 } else {
-                    callback(err,null);
+                    callback(err, null);
                 }
             });
         },
-        findItem: ['findDonation', function(results, callback){
+        findItem: ['findDonation', function (results, callback) {
             var donation = results.findDonation;
-            donation.getItems({where:{idDonationItem: idDonationItem}}).then(function(donationItem){
-                if(donationItem.length == 1){
+            donation.getItems({ where: { idDonationItem: idDonationItem } }).then(function (donationItem) {
+                if (donationItem.length == 1) {
                     callback(null, { 'body': donationItem[0], 'status': 200 });
-                }else{
-                    callback({ 'body': {'result': "no se encontro el donationItem " + idDonationItem}, 'status': 404 },null)
+                } else {
+                    callback({ 'body': { 'result': "no se encontro el donationItem " + idDonationItem }, 'status': 404 }, null)
                 }
             });
         }]
@@ -75,11 +75,11 @@ var getAllDonations = function (req, responseCB) {
 
     //Agrego filtro temporal. Por defecto trae los ultimos 30 dias - Esto si el usuario no filtra directo
     //por creation date
-    if(date == undefined){
+    if (date == undefined) {
         date = new Date();
         var daysRange = req.query.daysRange ? req.query.daysRange : 30;
-        date.setTime( date.getTime() - daysRange * 86400000 );
-        whereClosure.creationDate = { $gte: date };      
+        date.setTime(date.getTime() - daysRange * 86400000);
+        whereClosure.creationDate = { $gte: date };
     }
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
@@ -99,7 +99,7 @@ var getAllDonations = function (req, responseCB) {
             console.log(results);
             donationsModel.findAll({
                 offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure
-               }).then(function (donationsCol) {
+            }).then(function (donationsCol) {
                 var total_pages = Math.ceil(results.donationsCount / page_size);
                 var number_of_elements = donationsCol.length;
 
@@ -132,7 +132,7 @@ var getAllDonations = function (req, responseCB) {
 var getAllDonationItemsByDonation = function (idDonation, req, responseCB) {
     console.log(idDonation);
     var whereClosure = sequelize.and(queryHelper.buildQuery("DonationItem", req.query));
-    
+
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;
@@ -145,7 +145,7 @@ var getAllDonationItemsByDonation = function (idDonation, req, responseCB) {
                     callback(null, result.body)
                 } else {
                     console.log("falle");
-                    callback(err,null);
+                    callback(err, null);
                 }
             });
         },
@@ -161,7 +161,8 @@ var getAllDonationItemsByDonation = function (idDonation, req, responseCB) {
             var promises = [];
             whereClosure.idDonation = idDonation;
             donationItemsModel.findAll({
-                offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure}).then(function (donationItemsCol) {
+                offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure
+            }).then(function (donationItemsCol) {
                 var total_pages = Math.ceil(results.donationItemsCount / page_size);
                 var number_of_elements = donationItemsCol.length;
 
@@ -203,10 +204,32 @@ var createDonation = function (donationRequest, responseCB) {
             }).catch(error => {
                 cb({ 'body': { 'result': "Ha ocurrido un error creando el donation", 'fields': error.fields }, 'status': 500 }, null);
             });
-        }
+        },
+        createItems: ['createDonation', function (results, cb) {
+            var donation = results.createDonation.body;
+            var postDonation = getDonationRequest(donationRequest);
+            if (postDonation.items && postDonation.items.length > 0) {
+                var insertDonationItemsPromises = [];
+                for (var itemIx in postDonation.items) {
+                    var item = postDonation.items[itemIx];
+                    var postItem = getDonationItemRequest(item);
+                    postItem.idDonation = donation.idDonation;
+                    insertDonationItemsPromises.push(models.DonationItem.create(postItem));
+                }
+                Promise.all(insertDonationItemsPromises).then(function (values) {
+                    var donationJson = donation.toJSON();
+                    donationJson.items = values;
+                    cb(null, { 'body': donationJson, 'status': 201 });
+                }).catch(error => {
+                    cb({ 'body': { 'result': "Ha ocurrido un error creando los items", 'fields': error.fields }, 'status': 500 }, null);
+                });
+            } else {
+                cb(null, { 'body': donation, 'status': 201 })
+            }
+        }]
     }, function (err, results) {
         if (!err) {
-            responseCB(null, results.createDonation);
+            responseCB(null, results.createItems);
         } else {
             responseCB(err, null);
         }
@@ -265,11 +288,11 @@ var updateDonation = function (idDonation, donationRequest, responseCB) {
 
 }
 
-var updateDonationItem = function (idDonation,idDonationItem, donationItemRequest, responseCB) {
+var updateDonationItem = function (idDonation, idDonationItem, donationItemRequest, responseCB) {
     async.auto({
         // this function will just be passed a callback
         updateDonationItem: function (callback) {
-            getDonationItem(idDonation,idDonationItem, function (err, result) {
+            getDonationItem(idDonation, idDonationItem, function (err, result) {
                 if (!err) {
                     var donationItem = result.body;
                     if (donationItem) {
@@ -343,11 +366,11 @@ var deleteDonation = function (idDonation, responseCB) {
     });
 }
 
-var deleteDonationItem = function (idDonation,idDonationItem, responseCB) {
+var deleteDonationItem = function (idDonation, idDonationItem, responseCB) {
     async.auto({
         // this function will just be passed a callback
         findDonationItem: function (callback) {
-            getDonationItem(idDonation,idDonationItem, function (err, result) {
+            getDonationItem(idDonation, idDonationItem, function (err, result) {
                 if (!err) {
                     callback(null, result.body);
                 } else {
@@ -397,7 +420,8 @@ var getDonationRequest = function (request) {
         title: request.title,
         description: request.description,
         creationDate: request.creationDate,
-        status: request.status
+        status: request.status,
+        items: request.items
     };
 
     donationRequest = _.omitBy(donationRequest, _.isUndefined);
@@ -407,7 +431,7 @@ var getDonationRequest = function (request) {
 
 var getDonationItemRequest = function (request) {
     var donationItemRequest = {
-        idDonationItem: request.idDonationItem,        
+        idDonationItem: request.idDonationItem,
         idDonation: request.idDonation,
         foodType: request.foodType,
         inputType: request.inputType,
