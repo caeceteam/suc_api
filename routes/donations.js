@@ -53,7 +53,6 @@ router.post('/', function (req, res, next) {
     var donationRequest = req.body;
     donationsService.createDonation(donationRequest, function (err, result) {
         if (!err) {
-            console.log(result);
             res.status(result.status).json(result.body);
         } else {
             res.status(err.status).json(err.body);
