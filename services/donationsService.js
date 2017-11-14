@@ -420,7 +420,7 @@ var getDonationRequest = function (request) {
         title: request.title,
         description: request.description,
         creationDate: request.creationDate || request.creation_date,
-        status: request.status
+        status: request.status,
         items: request.items
     };
 
