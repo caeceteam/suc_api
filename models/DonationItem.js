@@ -27,7 +27,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     quantity: {
       type: DataTypes.FLOAT,
-      allowNull: false
+      allowNull: true
     },
     unit: {
       type: DataTypes.CHAR(5),
