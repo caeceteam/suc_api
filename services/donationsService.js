@@ -414,13 +414,13 @@ var deleteDonationItem = function (idDonation, idDonationItem, responseCB) {
 
 var getDonationRequest = function (request) {
     var donationRequest = {
-        idDonation: request.idDonation,
-        idUserSender: request.idUserSender,
-        idDinerReceiver: request.idDinerReceiver,
+        idDonation: request.idDonation || request.id_donation,
+        idUserSender: request.idUserSender || request.id_user_sender,
+        idDinerReceiver: request.idDinerReceiver || request.id_diner_receiver,
         title: request.title,
         description: request.description,
-        creationDate: request.creationDate,
-        status: request.status,
+        creationDate: request.creationDate || request.creation_date,
+        status: request.status
         items: request.items
     };
 
@@ -431,10 +431,10 @@ var getDonationRequest = function (request) {
 
 var getDonationItemRequest = function (request) {
     var donationItemRequest = {
-        idDonationItem: request.idDonationItem,
-        idDonation: request.idDonation,
-        foodType: request.foodType,
-        inputType: request.inputType,
+        idDonationItem: request.idDonationItem || request.id_donation_item,        
+        idDonation: request.idDonation || request.id_donation,
+        foodType: request.foodType || request.food_type,
+        inputType: request.inputType || request.input_type,
         unit: request.unit,
         quantity: request.quantity,
         description: request.description
