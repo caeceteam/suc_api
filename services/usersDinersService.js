@@ -57,9 +57,11 @@ var createUserDiner = function (userDinerRequest, responseCB) {
         // this function will just be passed a callback
         createUserDiner: function (cb) {
             var postUserDiner = getUserDinerRequest(userDinerRequest);
+            console.log(postUserDiner);
             userDinerModel.create(postUserDiner).then(function (userDiner) {
                 cb(null, { 'body': userDiner, 'status': 201 });
             }).catch(error => {
+                console.log(error);
                 cb({ 'body': { 'result': "Ha ocurrido un error creando el userDiner", 'fields': error.fields }, 'status': 500 }, null);
             });
         }
@@ -142,10 +144,10 @@ var deleteUserDiner = function (idDiner,idUser, responseCB) {
 
 var getUserDinerRequest = function (request) {
     var userDinerRequest = {
-        idUser: request.idUser,
-        idDiner: request.idDiner,
+        idUser: request.idUser || request.id_user,
+        idDiner: request.idDiner || request.id_diner,
         active: request.active,
-        isCollaborator: request.isCollaborator
+        isCollaborator: request.isCollaborator || request.is_collaborator
     };
 
     userDinerRequest = _.omitBy(userDinerRequest, _.isUndefined);
