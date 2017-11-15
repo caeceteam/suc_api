@@ -206,11 +206,11 @@ var getUserRequest = function (request, shouldCreatePassword) {
         mail: request.mail,
         phone: request.phone,
         street: request.street,
-        streetNumber: request.streetNumber || request.street_number,
+        streetNumber: request.streetNumber || request.street_number || null,
         floor: request.floor,
         door: request.door,
         role: request.role,
-        docNum: request.docNum || request.doc_number,
+        docNum: request.docNum || request.doc_number || '',
         bornDate: request.bornDate || request.born_date,
         active: request.active
     };
