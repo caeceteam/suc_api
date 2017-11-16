@@ -10,9 +10,11 @@ var dinersModel = models.Diner;
 var usersModel = models.User;
 var usersDinersModel = models.UserDiner;
 var dinersPhotoModel = models.DinerPhoto;
+var dinerRequestsModel = models.DinerRequest;
 dinersModel.belongsToMany(usersModel, { through: usersDinersModel, foreignKey: 'idDiner' });
 usersModel.belongsToMany(dinersModel, { through: usersDinersModel, foreignKey: 'idUser' });
 dinersModel.hasMany(dinersPhotoModel, { as: 'photos', foreignKey: 'idDiner' });
+dinersModel.hasMany(dinerRequestsModel, { as: 'requests', foreignKey: 'idDiner' });
 
 var getDiner = function (idDiner, responseCB) {
     var dinerResponse = { status: 200, json: {} };
@@ -135,11 +137,15 @@ var getAllDinersWithGeo = function (req, responseCB) {
                     order: sequelize.col('distance'),
                     where: sequelize.where(distance, {$lte: maxDistance}),
                   limit: Math.ceil(maxDistance),
-                  logging: console.log
+                  logging: console.log,
+                  include:[
+                    { model: dinerRequestsModel, as: 'requests' }
+                  ]
                 }
 
                 callback(null, query);
             }catch(ex){
+                console.log(ex);
                 callback({ 'body': { 'result': "Ha ocurrido un error obteniendo los diners"}, 'status': 500 })
             }
         },
