@@ -231,6 +231,9 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
         if (!err) {
             responseCB(null, results.endDinerCreation);
         } else {
+            if(results.createDiner != undefined && results.createDiner.body != undefined){
+                results.createDiner.body.destroy();
+            }
             responseCB(err, null);
         }
     });
