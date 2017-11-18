@@ -11,8 +11,8 @@ var usersModel = models.User;
 var usersDinersModel = models.UserDiner;
 var dinersPhotoModel = models.DinerPhoto;
 var dinerRequestsModel = models.DinerRequest;
-dinersModel.belongsToMany(usersModel, { through: usersDinersModel, foreignKey: 'idDiner' });
-usersModel.belongsToMany(dinersModel, { through: usersDinersModel, foreignKey: 'idUser' });
+dinersModel.belongsToMany(usersModel, { through: usersDinersModel, foreignKey: 'idDiner', as:'users' });
+usersModel.belongsToMany(dinersModel, { through: usersDinersModel, foreignKey: 'idUser', as:'users' });
 dinersModel.hasMany(dinersPhotoModel, { as: 'photos', foreignKey: 'idDiner' });
 dinersModel.hasMany(dinerRequestsModel, { as: 'requests', foreignKey: 'idDiner' });
 
@@ -21,7 +21,11 @@ var getDiner = function (idDiner, responseCB) {
     async.auto({
         // this function will just be passed a callback
         findDiner: function (callback) {
-            dinersModel.find({ where: { idDiner: idDiner } }).then(function (diner, err) {
+            dinersModel.find({ where: { idDiner: idDiner }, include: 
+                [{ model: dinerRequestsModel, as: 'requests' },
+                { model: dinersPhotoModel, as: 'photos' },
+                { model: usersModel, as: 'users'}]
+             }).then(function (diner, err) {
                 if (err) {
                     // diner not found 
                     return callback({ 'body': {}, 'status': 401 }, null);
@@ -33,38 +37,21 @@ var getDiner = function (idDiner, responseCB) {
                 }
                 callback(null, { 'body': diner, 'status': 200 });
             }).catch(error => {
+                console.log(error);
                 callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el diner " + idDiner, 'fields': error.fields }, 'status': 500 }, null);
             });
         },
-        findPhotos: ['findDiner', function (results, cb) {
-            results.findDiner.body.getPhotos().then(function (photos) {
-                cb(null, { 'body': photos });
-            }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo las photos para el diner " + idDiner, 'fields': error.fields }, 'status': 500 }, null);
-            });;
-        }],
-        findUsers: ['findDiner', function (results, cb) {
-            results.findDiner.body.getUsers().then(function (users) {
-                cb(null, { 'body': users });
-            }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los user para el diner " + idDiner, 'fields': error.fields }, 'status': 500 }, null);
-            });;
-        }],
-        endedDinerResponse: ['findPhotos', 'findUsers', function (results, cb) {
+        endedDinerResponse: ['findDiner', function (results, cb) {
             var user = {};
-            var users = results.findUsers.body;
-            var photos = results.findPhotos.body;
+            var dinerResponse = results.findDiner.body;
+            var users = results.findDiner.body.users;
             if (users.length == 1) {
                 user = users[0];
                 user = user.toJSON();
                 user.active = user.UserDiner.active;
-                user.UserDiner = undefined;
+                dinerResponse.user = user;
+                dinerResponse.users = undefined;
             }
-            dinerResponse = {
-                diner: results.findDiner.body,
-                user: user,
-                photos: photos
-            };
             cb(null, { 'body': dinerResponse, 'status': 200 })
         }]
     }, function (err, results) {
