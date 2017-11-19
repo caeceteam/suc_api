@@ -43,15 +43,17 @@ var getDiner = function (idDiner, responseCB) {
         },
         endedDinerResponse: ['findDiner', function (results, cb) {
             var user = {};
-            var dinerResponse = results.findDiner.body;
+            var dinerResponse = results.findDiner.body.toJSON();
             var users = results.findDiner.body.users;
+            console.log(users.length);
+            dinerResponse.user = {};
             if (users.length == 1) {
                 user = users[0];
                 user = user.toJSON();
                 user.active = user.UserDiner.active;
                 dinerResponse.user = user;
-                dinerResponse.users = undefined;
             }
+            dinerResponse.users = undefined;
             cb(null, { 'body': dinerResponse, 'status': 200 })
         }]
     }, function (err, results) {
@@ -229,13 +231,10 @@ var updateDiner = function (idDiner, requests, responseCB) {
     async.auto({
         // this function will just be passed a callback
         findDiner: function (callback) {
-            console.log("find Diner");
-            getDiner(idDiner, function (err, result) {
-                if (!err) {
-                    callback(null, result.body.diner);
-                } else {
-                    callback(err, null);
-                }
+            dinersModel.find({where: {idDiner: idDiner}}).then(function(diner){
+                callback(null, diner);
+            }).catch( error => {
+                callback({ 'body': { 'result': 'No se puedo actualizar el comedor' }, 'status': 404 }, null);
             });
         },
         findUser: function (callback) {
@@ -257,7 +256,6 @@ var updateDiner = function (idDiner, requests, responseCB) {
                 diner.update(getDinerRequest(dinerRequest)).then(function (updatedDiner) {
                     callback(null, updatedDiner);
                 }).catch(error => {
-                    console.log(error);
                     callback({ 'body': { 'result': 'No se puedo actualizar el comedor', 'fields': error.fields }, 'status': 500 }, null);
                 });
             } else {
@@ -267,6 +265,7 @@ var updateDiner = function (idDiner, requests, responseCB) {
         updateUser: ['findUser', function (results, callback) {
             var user = results.findUser;
             if (user != undefined) {
+                console.log("Aca no");
                 usersService.updateUser(userRequest.mail, userRequest, function (err, result) {
                     var updatedUser = result.body;
                     if (user) {
@@ -315,9 +314,10 @@ var deleteDiner = function (idDiner, responseCB) {
         // this function will just be passed a callback
         findDiner: function (callback) {
             var diner;
-            getDiner(idDiner, function (err, result) {
-                diner = result.body.diner;
+            dinersModel.find({where: {idDiner: idDiner}}).then(function(diner){
                 callback(null, diner);
+            }).catch( error => {
+                callback({ 'body': { 'result': 'No se puedo actualizar el comedor' }, 'status': 404 }, null);
             });
         },
         countUsers: ['findDiner', function (results, callback) {
