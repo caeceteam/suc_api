@@ -4,8 +4,12 @@ var _ = require('lodash');
 var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var usersModel = models.User;
+var dinersModel = models.Diner;
 var userDinerModel = models.UserDiner;
+var dinerRequestsModel = models.DinerRequest;
 userDinerModel.belongsTo(usersModel, { as: 'user', foreignKey: 'idUser' });
+userDinerModel.belongsTo(dinersModel, { as: 'diner', foreignKey: 'idDiner' });
+dinersModel.hasMany(dinerRequestsModel, { as: 'requests', foreignKey: 'idDiner' });
 
 var getUsersDiners = function (req, responseCB) {
     var whereClosure = sequelize.and ( queryHelper.buildQuery("UserDiner",req.query) ) ;
@@ -24,7 +28,11 @@ var getUsersDiners = function (req, responseCB) {
             });
         },
         paginate: ['usersDinersCount', function (results, cb) {
-            userDinerModel.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure , include:[{model: usersModel, as: 'user'}]}).then(function (usersDinersCol) {
+            userDinerModel.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure ,
+                 include:[{model: usersModel, as: 'user'},
+                 {model: dinersModel, as: 'diner', 
+                 include:[{model: dinerRequestsModel, as: 'requests'}]
+                }]}).then(function (usersDinersCol) {
                 var total_pages = Math.ceil(results.usersDinersCount / page_size);
                 var number_of_elements = usersDinersCol.length;
                 var result = {

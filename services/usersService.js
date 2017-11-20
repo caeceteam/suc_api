@@ -23,6 +23,7 @@ var getUser = function (searchParam, responseCB) {
 
                 if (!user) {
                     // incorrect user
+                    console.log("no encontro");                
                     return callback({ 'body': {}, 'status': 404 }, null);
                 }
 
@@ -119,6 +120,7 @@ var updateUser = function (searchParam, userRequest, responseCB) {
     async.auto({
         // this function will just be passed a callback
         updateUser: function (callback) {
+            console.log("Aca si que si");
             getUser(searchParam, function (err, result) {
                 if (!err) {
                     var user = result.body.user;
