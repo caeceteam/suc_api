@@ -5,8 +5,9 @@ var async = require('async');
 var _ = require('lodash');
 var donationsModel = models.Donation;
 var donationItemsModel = models.DonationItem;
-
-donationsModel.hasMany(donationItemsModel, { as: 'items', foreignKey: 'idDonation' })
+var dinersModel = models.Diner;
+donationsModel.belongsTo(dinersModel, {as:'diner',  foreignKey: 'idDinerReceiver', targetKey:'idDiner'});
+donationsModel.hasMany(donationItemsModel, { as: 'items', foreignKey: 'idDonation' });
 var getDonation = function (idDonation, responseCB) {
     async.auto({
         // this function will just be passed a callback
@@ -50,7 +51,7 @@ var getDonationItem = function (idDonation, idDonationItem, responseCB) {
         },
         findItem: ['findDonation', function (results, callback) {
             var donation = results.findDonation;
-            donation.getItems({ where: { idDonationItem: idDonationItem } }).then(function (donationItem) {
+            donation.getItems({ where: { idDonationItem: idDonationItem }}).then(function (donationItem) {
                 if (donationItem.length == 1) {
                     callback(null, { 'body': donationItem[0], 'status': 200 });
                 } else {
@@ -98,7 +99,8 @@ var getAllDonations = function (req, responseCB) {
             var promises = [];
             console.log(results);
             donationsModel.findAll({
-                offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure
+                offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure,
+                 include:[{model:dinersModel, as:'diner'}] 
             }).then(function (donationsCol) {
                 var total_pages = Math.ceil(results.donationsCount / page_size);
                 var number_of_elements = donationsCol.length;
