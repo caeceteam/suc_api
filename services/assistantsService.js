@@ -57,12 +57,10 @@ var getAllAssistants = function (idDiner, req, responseCB) {
     async.auto({
         // this function will just be passed a callback
         findDiner: function (callback) {
-            dinersService.getDiner(idDiner, function (err, result) {
-                if (!err) {
-                    callback(null, result.body.diner);
-                } else {
-                    callback(err, null);
-                }
+            dinersModel.find({where: {idDiner: idDiner}}).then(function(diner){
+                callback(null, diner);
+            }).catch( error => {
+                callback({ 'body': { 'result': 'No se pudo obtener los asistentes del comedor' }, 'status': 404 }, null);
             });
         },
         assistantsCount: ['findDiner', function (results, callback) {
@@ -108,12 +106,10 @@ var createAssistant = function (assistantRequest, responseCB) {
     async.auto({
         // this function will just be passed a callback
         findDiner: function (callback) {
-            dinersService.getDiner(postAssistant.idDiner, function (err, result) {
-                if (!err) {
-                    callback(null, result.body.diner);
-                } else {
-                    callback(err, null);
-                }
+            dinersModel.find({where: {idDiner: postAssistant.idDiner}}).then(function(diner){
+                callback(null, diner);
+            }).catch( error => {
+                callback({ 'body': { 'result': 'No se pudo crear el asistente' }, 'status': 404 }, null);
             });
         },
         createAssistant: ['findDiner', function (results, cb) {
@@ -142,12 +138,10 @@ var updateAssistant = function (idAssistant, assistantRequest, responseCB) {
     async.auto({
         // this function will just be passed a callback
         findDiner: function (callback) {
-            dinersService.getDiner(putAssistant.idDiner, function (err, result) {
-                if (!err) {
-                    callback(null, result.body.diner);
-                } else {
-                    callback(err, null);
-                }
+            dinersModel.find({where: {idDiner: putAssistant.idDiner}}).then(function(diner){
+                callback(null, diner);
+            }).catch( error => {
+                callback({ 'body': { 'result': 'No se pudo actualizar el asistente' }, 'status': 404 }, null);
             });
         },
         findAssistant: function (callback) {
@@ -170,10 +164,10 @@ var updateAssistant = function (idAssistant, assistantRequest, responseCB) {
                     callback(null, { 'body':jsonUpdatedAssistant, 'status': 202 });
                 }).catch(error => {
                     console.log(error);
-                    callback({ 'body': { 'result': 'No se puedo actualizar el assistant', 'fields': error.fields }, 'status': 500 }, null);
+                    callback({ 'body': { 'result': 'No se pudo actualizar el assistant', 'fields': error.fields }, 'status': 500 }, null);
                 });
             } else {
-                callback({ 'body': { 'result': 'No se puedo actualizar el assistant' }, 'status': 404 }, null);
+                callback({ 'body': { 'result': 'No se pudo actualizar el assistant' }, 'status': 404 }, null);
             }
         }]
     }, function (err, results) {
