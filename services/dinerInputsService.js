@@ -122,7 +122,7 @@ var updateDinerInput = function (idDinerInput, dinerInputRequest, responseCB) {
         updateDinerInput: function (callback) {
             getDinerInput(idDinerInput, function (err, result) {
                 if (!err) {
-                    var dinerInput = result.body;
+                    var dinerInput = result.body.dinerInput;
                     if (dinerInput) {
                         dinerInput.update(getDinerInputRequest(dinerInputRequest)).then(function (updatedDinerInput) {
                             callback(null, { 'body': updatedDinerInput, 'status': 202 });
