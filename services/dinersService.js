@@ -234,6 +234,7 @@ var updateDiner = function (idDiner, requests, responseCB) {
             dinersModel.find({where: {idDiner: idDiner}}).then(function(diner){
                 callback(null, diner);
             }).catch( error => {
+                console.log(error);
                 callback({ 'body': { 'result': 'No se puedo actualizar el comedor' }, 'status': 404 }, null);
             });
         },
@@ -256,6 +257,7 @@ var updateDiner = function (idDiner, requests, responseCB) {
                 diner.update(getDinerRequest(dinerRequest)).then(function (updatedDiner) {
                     callback(null, updatedDiner);
                 }).catch(error => {
+                    console.log(error);
                     callback({ 'body': { 'result': 'No se puedo actualizar el comedor', 'fields': error.fields }, 'status': 500 }, null);
                 });
             } else {
