@@ -7,7 +7,7 @@ var buildQuery = function (entityName, parameters) {
 
     for (var attr in model.attributes) {
         var parameterToSearch = parameters[attr];
-        if (parameterToSearch != undefined) {
+        if (parameterToSearch != undefined && parameterToSearch != "") {
             sequelizeWhere[attr] = { $like: "%" + parameterToSearch + "%" }
         }
     }
