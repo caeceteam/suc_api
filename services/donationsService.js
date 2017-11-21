@@ -3,10 +3,11 @@ var sequelize = require('sequelize');
 var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var _ = require('lodash');
+var emailService = require('./emailService');
 var donationsModel = models.Donation;
 var donationItemsModel = models.DonationItem;
 var dinersModel = models.Diner;
-donationsModel.belongsTo(dinersModel, {as:'diner',  foreignKey: 'idDinerReceiver', targetKey:'idDiner'});
+donationsModel.belongsTo(dinersModel, { as: 'diner', foreignKey: 'idDinerReceiver', targetKey: 'idDiner' });
 donationsModel.hasMany(donationItemsModel, { as: 'items', foreignKey: 'idDonation' });
 var getDonation = function (idDonation, responseCB) {
     async.auto({
@@ -51,7 +52,7 @@ var getDonationItem = function (idDonation, idDonationItem, responseCB) {
         },
         findItem: ['findDonation', function (results, callback) {
             var donation = results.findDonation;
-            donation.getItems({ where: { idDonationItem: idDonationItem }}).then(function (donationItem) {
+            donation.getItems({ where: { idDonationItem: idDonationItem } }).then(function (donationItem) {
                 if (donationItem.length == 1) {
                     callback(null, { 'body': donationItem[0], 'status': 200 });
                 } else {
@@ -100,7 +101,7 @@ var getAllDonations = function (req, responseCB) {
             console.log(results);
             donationsModel.findAll({
                 offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure,
-                 include:[{model:dinersModel, as:'diner'}] 
+                include: [{ model: dinersModel, as: 'diner' }]
             }).then(function (donationsCol) {
                 var total_pages = Math.ceil(results.donationsCount / page_size);
                 var number_of_elements = donationsCol.length;
@@ -204,6 +205,7 @@ var createDonation = function (donationRequest, responseCB) {
             donationsModel.create(postDonation).then(function (donation) {
                 cb(null, { 'body': donation, 'status': 201 });
             }).catch(error => {
+                console.log(error);
                 cb({ 'body': { 'result': "Ha ocurrido un error creando el donation", 'fields': error.fields }, 'status': 500 }, null);
             });
         },
@@ -228,6 +230,16 @@ var createDonation = function (donationRequest, responseCB) {
             } else {
                 cb(null, { 'body': donation, 'status': 201 })
             }
+        }],
+        sendMail: ['createDonation', function (results, callback) {
+            var donation = results.createDonation.body;
+            emailService.sendDonationMailToDiner({
+                user_name: donation.idUserSender,
+                idDiner: donation.idDinerReceiver,
+                title: donation.title,
+                description: donation.description
+            });
+            callback(null, null);
         }]
     }, function (err, results) {
         if (!err) {
@@ -433,7 +445,7 @@ var getDonationRequest = function (request) {
 
 var getDonationItemRequest = function (request) {
     var donationItemRequest = {
-        idDonationItem: request.idDonationItem || request.id_donation_item,        
+        idDonationItem: request.idDonationItem || request.id_donation_item,
         idDonation: request.idDonation || request.id_donation,
         foodType: request.foodType || request.food_type,
         inputType: request.inputType || request.input_type,

@@ -2,6 +2,13 @@ var nodemailer = require('nodemailer');
 var usersService = require('./usersService');
 var hbs = require('nodemailer-express-handlebars');
 var async = require('async')
+var models = require('../models/');
+var dateFormat = require('dateFormat');
+
+var dinersModel = models.Diner;
+var usersModel = models.User;
+
+
 
 var options = {
   viewEngine: {
@@ -104,6 +111,71 @@ var sendForgotPasswordMail = function (mailParams, callback) {
 
 }
 
+var sendDonationMailToDiner = function (mailParams, callback) {
+  var userName = mailParams.user_name;
+  var idDiner = mailParams.idDiner;
+
+  async.auto({
+    // this function will just be passed a callback
+    findDiner: function (callback) {
+      dinersModel.find({ where: { idDiner: idDiner } }).then(function (diner) {
+        callback(null, diner);
+      }).catch(error => {
+        callback({ 'body': { 'result': 'No se pudo enviar el mail de donacion' }, 'status': 404 }, null);
+      });
+    },
+    findUser: function (callback) {
+      usersModel.find({ where: { idUser: userName } }).then(function (user) {
+        callback(null, user);
+      }).catch(error => {
+        callback({ 'body': { 'result': 'No se pudo enviar el mail de donacion' }, 'status': 404 }, null);
+      });
+    },
+    sendMail: ['findDiner', 'findUser', function (results, callback) {
+      var user = results.findUser;
+      var diner = results.findDiner;
+      var now = new Date();
+      var mailOptions = {
+        from: 'suc@no-reply.com',
+        to: diner.mail,
+        subject: 'Has recibido una nueva donación',
+        template: 'donation_send',
+        context: {
+          user_name: user.name + " " + user.surname,
+          diner_name: diner.name,
+          title: mailParams.title,
+          description: mailParams.description,
+          creation_date: dateFormat(now,"dd/mm/yyyy")
+        }
+      };
+
+      callback(null, mailOptions);
+    }]
+  }, function (err, results) {
+    if (!err) {
+      sendMail(results.sendMail, callback);
+    }
+  });
+
+
+  var user = usersService.getUser(mailParams.user_name, function (err, result) {
+    var mailOptions = {
+      from: 'suc@no-reply.com',
+      to: result.body.user.mail,
+      subject: 'Blanqueo de contraseña',
+      template: 'forgot_password',
+      context: {
+        user_name: mailParams.user_name,
+        new_password: mailParams.new_password
+      }
+    };
+
+    sendMail(mailOptions, callback);
+  });
+
+
+}
+
 var sendMail = function (mailOptions, callback) {
   transporter.use('compile', hbs(options));
   transporter.sendMail(mailOptions, function (error, info) {
@@ -122,5 +194,6 @@ module.exports = {
   sendRegistrationApprovedMail: sendRegistrationApprovedMail,
   sendRegistrationRejectedMail: sendRegistrationRejectedMail,
   sendNoValidatableRegistration: sendNoValidatableRegistration,
-  sendForgotPasswordMail: sendForgotPasswordMail
+  sendForgotPasswordMail: sendForgotPasswordMail,
+  sendDonationMailToDiner: sendDonationMailToDiner
 };
