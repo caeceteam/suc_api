@@ -4,8 +4,11 @@ var _ = require('lodash');
 var queryHelper = require('../helpers/queryHelper');
 var usersService = require('./usersService');
 var async = require('async');
+var emailsService = require('../services/emailService')
+
 var eventsModel = models.Event;
 var eventsPhotoModel = models.EventPhoto;
+var usersDinersModel = models.UserDiner;
 eventsModel.hasMany(eventsPhotoModel, { as: 'photos', foreignKey: 'idEvent' });
 
 var getEvent = function (idEvent, responseCB) {
@@ -146,7 +149,38 @@ var createEvent = function (eventRequest, responseCB) {
             }).catch(error => {
                 callback({ 'body': { 'result': "Ha ocurrido un error creando el event", 'fields': error.fields }, 'status': 500 }, null);
             });
-        }
+        },
+        getUsersForNotifications: ['createEvent', function(results, callback){
+            var event = results.createEvent.body;
+            var users = usersDinersModel.findAll({where:{idDiner: event.idDiner,
+                isCollaborator: true}}).
+                 then(function(users){
+                    callback(null, users);
+
+            }).catch(error => {
+                console.log(error);
+                callback({ 'body': { 'result': "Ha ocurrido un error enviando las notificaciones sobre el evento", 'fields': error.fields }, 'status': 500 }, null);                
+            });
+            
+        }],
+        sendNotifications: ['getUsersForNotifications', function(results, callback){
+            var event = results.createEvent.body;
+            var users = results.getUsersForNotifications;
+            for(var user in users){
+                var mailParams = {
+                    user_id: users[user].idUser,
+                    diner_id: event.idDiner,
+                    event_name: event.name,
+                    event_date: event.date,
+                    event_time: event.date,
+                    event_address: event.street + " " + event.streetNumber 
+                };
+                emailsService.sendEventNotification(mailParams, function (response) {
+                    //callback(null, null);
+                });
+            }
+            callback(null, null);
+        }]
     }, function (err, results) {
         if (!err) {
             responseCB(null, results.createEvent);
