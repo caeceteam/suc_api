@@ -291,7 +291,18 @@ var updateDonation = function (idDonation, donationRequest, responseCB) {
                     callback(err, null);
                 }
             });
-        }
+        },
+        sendMail: ['updateDonation', function (results, callback) {
+            var donation = results.updateDonation.body;
+            emailService.sendDonationUpdateMailToUser({
+                user_name: donation.idUserSender,
+                idDiner: donation.idDinerReceiver,
+                title: donation.title,
+                description: donation.description,
+                statusText: getStatusText(donation.status)
+            });
+            callback(null, null);
+        }]
     }, function (err, results) {
         if (!err) {
             responseCB(null, results.updateDonation);
@@ -424,6 +435,22 @@ var deleteDonationItem = function (idDonation, idDonationItem, responseCB) {
             responseCB(err, null);
         }
     });
+}
+
+var getStatusText = function (statusId) {
+    var status = "";
+    switch (statusId) {
+        case 1:
+            status = "Aprobada";
+            break;
+        case 2:
+            status = "Rechazada";
+            break;
+        default:
+            status = "Revisada";
+            break;
+    }
+    return status;
 }
 
 var getDonationRequest = function (request) {

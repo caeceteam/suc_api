@@ -92,8 +92,8 @@ var sendEventNotification = function (mailParams, callback) {
             event_name: mailParams.event_name,
             diner_name: diner.name,
             phone: diner.phone,
-            event_date: mailParams.event_date,
-            event_time: mailParams.event_time,
+            event_date: dateFormat(now,"dd/mm/yyyy"),
+            event_time: dateFormat(now,"HH:MM"),
             event_address: mailParams.event_address
           }
         };
@@ -205,6 +205,56 @@ var sendDonationMailToDiner = function (mailParams, callback) {
   });
 }
 
+
+var sendDonationUpdateMailToUser = function (mailParams, callback) {
+  var userName = mailParams.user_name;
+  var idDiner = mailParams.idDiner;
+
+  async.auto({
+    // this function will just be passed a callback
+    findDiner: function (callback) {
+      dinersModel.find({ where: { idDiner: idDiner } }).then(function (diner) {
+        callback(null, diner);
+      }).catch(error => {
+        callback({ 'body': { 'result': 'No se pudo enviar el mail de donacion' }, 'status': 404 }, null);
+      });
+    },
+    findUser: function (callback) {
+      usersModel.find({ where: { idUser: userName } }).then(function (user) {
+        callback(null, user);
+      }).catch(error => {
+        callback({ 'body': { 'result': 'No se pudo enviar el mail de donacion' }, 'status': 404 }, null);
+      });
+    },
+    sendMail: ['findDiner', 'findUser', function (results, callback) {
+      var user = results.findUser;
+      var diner = results.findDiner;
+      var statusText = mailParams.statusText;
+      var now = new Date();
+      var mailOptions = {
+        from: 'suc@no-reply.com',
+        to: user.mail,
+        subject: 'Tu donación ha sido ' + statusText,
+        template: 'donation_update',
+        context: {
+          user_name: user.name + " " + user.surname,
+          diner_name: diner.name,
+          title: mailParams.title,
+          description: mailParams.description,
+          creation_date: dateFormat(now,"dd/mm/yyyy"),
+          status_text: statusText
+        }
+      };
+
+      callback(null, mailOptions);
+    }]
+  }, function (err, results) {
+    if (!err) {
+      sendMail(results.sendMail, callback);
+    }
+  });
+}
+
 var sendMail = function (mailOptions, callback) {
   transporter.use('compile', hbs(options));
   transporter.sendMail(mailOptions, function (error, info) {
@@ -225,5 +275,6 @@ module.exports = {
   sendNoValidatableRegistration: sendNoValidatableRegistration,
   sendForgotPasswordMail: sendForgotPasswordMail,
   sendDonationMailToDiner: sendDonationMailToDiner,
-  sendEventNotification:sendEventNotification
+  sendEventNotification:sendEventNotification,
+  sendDonationUpdateMailToUser:sendDonationUpdateMailToUser
 };
