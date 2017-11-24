@@ -35,7 +35,7 @@ var authenticate = function (credentials, responseCB) {
         },
         validatePassword: ['findUser', function (results, cb) {
             var user = results.findUser.user;
-            var hashedPass = hash.update(password).digest("base64");
+            var hashedPass = hash.update(user.alias+password).digest("base64");
             if (user.pass !== hashedPass) {
                 // incorrect password
                 cb({ 'body': { 'result': "La contraseña ingresada es invalida" }, 'status': 401 }, null);
@@ -97,7 +97,7 @@ var updatePassword = function (credentials, newPassword, responseCB) {
         updatePassword: ['validatePassword', function (result, callback) {
             var user = result.validatePassword;
             try {
-                user.pass = newHash.update(newPassword).digest("base64");
+                user.pass = newHash.update(user.alias + newPassword).digest("base64");
                 user.save();
                 callback(null, user);
             } catch (exception) {
