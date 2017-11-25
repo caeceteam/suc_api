@@ -1,23 +1,23 @@
 {
   "development": {
-    "username": "sucadmin",
-    "password": "sucadmin2017",
-    "database": "suc_db",
-    "host": "127.0.0.1",
+    "username": "b9052dbd831a01",
+    "password": "4142cb02",
+    "database": "heroku_d6dcd1b0ab23060",
+    "host": "us-cdbr-iron-east-05.cleardb.net",
     "dialect": "mysql"
   },
   "test": {
-    "username": "root",
-    "password": null,
-    "database": "database_test",
-    "host": "127.0.0.1",
+    "username": "b9052dbd831a01",
+    "password": "4142cb02",
+    "database": "heroku_d6dcd1b0ab23060",
+    "host": "us-cdbr-iron-east-05.cleardb.net",
     "dialect": "mysql"
   },
   "production": {
-    "username": "root",
-    "password": null,
-    "database": "database_production",
-    "host": "127.0.0.1",
+    "username": "b9052dbd831a01",
+    "password": "4142cb02",
+    "database": "heroku_d6dcd1b0ab23060",
+    "host": "us-cdbr-iron-east-05.cleardb.net",
     "dialect": "mysql"
   }
 }
