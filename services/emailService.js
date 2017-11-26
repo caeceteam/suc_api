@@ -22,7 +22,7 @@ var options = {
   extName: '.hbs'
 };
 
-var transporter = nodemailer.createTransport(smtpTransport({
+var transporter = nodemailer.createTransport("SMTP",{
   service: 'Gmail',
   XOAuth2: {
     user: "sistemaunicodecomedores@gmail.com", // Your gmail address.
@@ -31,7 +31,7 @@ var transporter = nodemailer.createTransport(smtpTransport({
     clientSecret: "blUaU8KMsbakFB7XKWHFZmcs",
     refreshToken: "1/BRAMjs6ZEjDLpGiqg0kUxc_zwtylHxIovlgWkzsaj--OVBP7mcnifhfzvcKksMnI"
   }
-}));
+});
 
 var sendRegistration = function (mailParams, callback) {
   var mailOptions = {
