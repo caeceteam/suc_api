@@ -3,7 +3,7 @@ var usersService = require('./usersService');
 var hbs = require('nodemailer-express-handlebars');
 var async = require('async')
 var models = require('../models/');
-var dateFormat = require('dateFormat');
+var dateFormat = require('dateformat');
 
 var dinersModel = models.Diner;
 var usersModel = models.User;
