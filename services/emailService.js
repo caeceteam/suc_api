@@ -23,7 +23,7 @@ var options = {
 };
 
 var transporter = nodemailer.createTransport(smtpTransport({
-  service: 'gmail',
+  service: 'Gmail',
   XOAuth2: {
     user: "sistemaunicodecomedores@gmail.com", // Your gmail address.
                                           // Not @developer.gserviceaccount.com
