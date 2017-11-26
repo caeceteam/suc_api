@@ -22,16 +22,19 @@ var options = {
   extName: '.hbs'
 };
 
-var transporter = nodemailer.createTransport("SMTP",{
-  service: 'Gmail',
-  XOAuth2: {
-    user: "sistemaunicodecomedores@gmail.com", // Your gmail address.
-                                          // Not @developer.gserviceaccount.com
-    clientId: "29204936892-t2o7pnb6tvn8u2nppi3edjhgpjrmsl6s.apps.googleusercontent.com",
-    clientSecret: "blUaU8KMsbakFB7XKWHFZmcs",
-    refreshToken: "1/BRAMjs6ZEjDLpGiqg0kUxc_zwtylHxIovlgWkzsaj--OVBP7mcnifhfzvcKksMnI"
+var transport = nodemailer.createTransport("SMTP", {
+  service: "Gmail",
+  auth: {
+    XOAuth2: {
+      user: "sistemaunicodecomedores@gmail.com", // Your gmail address.
+      // Not @developer.gserviceaccount.com
+      clientId: "29204936892-t2o7pnb6tvn8u2nppi3edjhgpjrmsl6s.apps.googleusercontent.com",
+      clientSecret: "blUaU8KMsbakFB7XKWHFZmcs",
+      refreshToken: "1/BRAMjs6ZEjDLpGiqg0kUxc_zwtylHxIovlgWkzsaj--OVBP7mcnifhfzvcKksMnI"
+    }
   }
 });
+
 
 var sendRegistration = function (mailParams, callback) {
   var mailOptions = {
@@ -67,48 +70,48 @@ var sendNoValidatableRegistration = function (mailParams, callback) {
 var sendEventNotification = function (mailParams, callback) {
   var idDiner = mailParams.diner_id;
   var idUser = mailParams.user_id;
-    async.auto({
-      // this function will just be passed a callback
-      findDiner: function (callback) {
-        dinersModel.find({ where: { idDiner: idDiner } }).then(function (diner) {
-          callback(null, diner);
-        }).catch(error => {
-          callback({ 'body': { 'result': 'No se pudo enviar el mail de notificacion' }, 'status': 404 }, null);
-        });
-      },
-      findUser: function (callback) {
-        usersModel.find({ where: { idUser: idUser } }).then(function (user) {
-          callback(null, user);
-        }).catch(error => {
-          callback({ 'body': { 'result': 'No se pudo enviar el mail de notificacion' }, 'status': 404 }, null);
-        });
-      },
-      sendMail: ['findDiner', 'findUser', function (results, callback) {
-        var diner = results.findDiner;
-        var user = results.findUser;
-        var now = new Date();
-        var mailOptions = {
-          from: 'suc@no-reply.com',
-          to: user.mail,
-          subject: diner.name + ' va a estar realizando un evento proximamente',
-          template: 'event_notification',
-          context: {
-            event_name: mailParams.event_name,
-            diner_name: diner.name,
-            phone: diner.phone,
-            event_date: dateFormat(now,"dd/mm/yyyy"),
-            event_time: dateFormat(now,"HH:MM"),
-            event_address: mailParams.event_address
-          }
-        };
-  
-        callback(null, mailOptions);
-      }]
-    }, function (err, results) {
-      if (!err) {
-        sendMail(results.sendMail, callback);
-      }
-    });
+  async.auto({
+    // this function will just be passed a callback
+    findDiner: function (callback) {
+      dinersModel.find({ where: { idDiner: idDiner } }).then(function (diner) {
+        callback(null, diner);
+      }).catch(error => {
+        callback({ 'body': { 'result': 'No se pudo enviar el mail de notificacion' }, 'status': 404 }, null);
+      });
+    },
+    findUser: function (callback) {
+      usersModel.find({ where: { idUser: idUser } }).then(function (user) {
+        callback(null, user);
+      }).catch(error => {
+        callback({ 'body': { 'result': 'No se pudo enviar el mail de notificacion' }, 'status': 404 }, null);
+      });
+    },
+    sendMail: ['findDiner', 'findUser', function (results, callback) {
+      var diner = results.findDiner;
+      var user = results.findUser;
+      var now = new Date();
+      var mailOptions = {
+        from: 'suc@no-reply.com',
+        to: user.mail,
+        subject: diner.name + ' va a estar realizando un evento proximamente',
+        template: 'event_notification',
+        context: {
+          event_name: mailParams.event_name,
+          diner_name: diner.name,
+          phone: diner.phone,
+          event_date: dateFormat(now, "dd/mm/yyyy"),
+          event_time: dateFormat(now, "HH:MM"),
+          event_address: mailParams.event_address
+        }
+      };
+
+      callback(null, mailOptions);
+    }]
+  }, function (err, results) {
+    if (!err) {
+      sendMail(results.sendMail, callback);
+    }
+  });
 }
 
 var sendRegistrationApprovedMail = function (mailParams, callback) {
@@ -196,7 +199,7 @@ var sendDonationMailToDiner = function (mailParams, callback) {
           diner_name: diner.name,
           title: mailParams.title,
           description: mailParams.description,
-          creation_date: dateFormat(now,"dd/mm/yyyy")
+          creation_date: dateFormat(now, "dd/mm/yyyy")
         }
       };
 
@@ -245,7 +248,7 @@ var sendDonationUpdateMailToUser = function (mailParams, callback) {
           diner_name: diner.name,
           title: mailParams.title,
           description: mailParams.description,
-          creation_date: dateFormat(now,"dd/mm/yyyy"),
+          creation_date: dateFormat(now, "dd/mm/yyyy"),
           status_text: statusText
         }
       };
@@ -264,10 +267,10 @@ var sendMail = function (mailOptions, callback) {
   transporter.sendMail(mailOptions, function (error, info) {
     if (error) {
       console.log(error);
-      callback({ "result": "error", "status": 500 },null);
+      callback({ "result": "error", "status": 500 }, null);
     } else {
       console.log('Email sent: ' + info.response);
-      callback(null,{ "result": "ok", "status": 200 });
+      callback(null, { "result": "ok", "status": 200 });
     }
   });
 }
@@ -279,6 +282,6 @@ module.exports = {
   sendNoValidatableRegistration: sendNoValidatableRegistration,
   sendForgotPasswordMail: sendForgotPasswordMail,
   sendDonationMailToDiner: sendDonationMailToDiner,
-  sendEventNotification:sendEventNotification,
-  sendDonationUpdateMailToUser:sendDonationUpdateMailToUser
+  sendEventNotification: sendEventNotification,
+  sendDonationUpdateMailToUser: sendDonationUpdateMailToUser
 };
