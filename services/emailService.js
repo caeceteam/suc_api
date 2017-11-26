@@ -3,7 +3,7 @@ var usersService = require('./usersService');
 var hbs = require('nodemailer-express-handlebars');
 var async = require('async')
 var models = require('../models/');
-var dateFormat = require('dateFormat');
+var dateFormat = require('dateformat');
 
 var dinersModel = models.Diner;
 var usersModel = models.User;
@@ -22,12 +22,20 @@ var options = {
 };
 
 var transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
-    user: 'sistemaunicodecomedores@gmail.com',
-    pass: 'caeceteam'
+      type: 'OAuth2',
+      user: 'sistemaunicodecomedores@gmail.com',
+      clientId: '29204936892-t2o7pnb6tvn8u2nppi3edjhgpjrmsl6s.apps.googleusercontent.com',
+      clientSecret: 'blUaU8KMsbakFB7XKWHFZmcs',
+      refreshToken: '1/BRAMjs6ZEjDLpGiqg0kUxc_zwtylHxIovlgWkzsaj--OVBP7mcnifhfzvcKksMnI',
+      accessToken: 'ya29.GlsQBa3Zuyk2w-eB3yvVrUIG-ouumF7J0rcxjZ10QD98zRf8JzGB0PGwRY5qjzdAri4cjSfKNZE_ZAZsTrGrM-6-pCTg_IPmql-V5a6dV1Rjt4kr5UvZfJMYxCwj',
+      expires: 1484314697598
   }
 });
+
 
 var sendRegistration = function (mailParams, callback) {
   var mailOptions = {
