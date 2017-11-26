@@ -1,4 +1,7 @@
 var models = require('../models/');
+var sequelize = require('sequelize');
+var _ = require('lodash');
+var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var foodTypesModel = models.FoodType;
 
@@ -32,7 +35,7 @@ var getFoodType = function (idFoodType, responseCB) {
 }
 
 var getAllFoodTypes = function (req, responseCB) {
-    var whereClosure = {};
+    var whereClosure = sequelize.and ( queryHelper.buildQuery("FoodType",req.query) ) ;
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;
@@ -40,7 +43,7 @@ var getAllFoodTypes = function (req, responseCB) {
     async.auto({
         // this function will just be passed a callback
         foodTypesCount: function (callback) {
-            foodTypesModel.count().then(function (foodTypesQty) {
+            foodTypesModel.count({ where: whereClosure }).then(function (foodTypesQty) {
                 callback(null, foodTypesQty)
             }).catch(error => {
                 callback(error, null);
@@ -175,7 +178,7 @@ var deleteFoodType = function (idFoodType, responseCB) {
 }
 
 var getFoodTypeRequest = function (request) {
-    return {
+    var foodTypeRequest = {
         code: request.code,
         name: request.name,
         description: request.description,
@@ -183,6 +186,9 @@ var getFoodTypeRequest = function (request) {
         diabetic: request.diabetic,
         celiac: request.celiac
     };
+
+    foodTypeRequest = _.omitBy(foodTypeRequest, _.isUndefined);
+    return foodTypeRequest;    
 };
 
 

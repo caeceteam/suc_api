@@ -24,12 +24,12 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.TEXT,
       allowNull: false
     },
-    startDate: {
+    creationDate: {
       type: DataTypes.DATE,
       allowNull: false
     },
-    endDate: {
-      type: DataTypes.DATE,
+    status: {
+      type: DataTypes.INTEGER(2),
       allowNull: false
     }
   }, {

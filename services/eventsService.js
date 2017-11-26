@@ -1,8 +1,14 @@
 var models = require('../models/');
+var sequelize = require('sequelize');
+var _ = require('lodash');
+var queryHelper = require('../helpers/queryHelper');
 var usersService = require('./usersService');
 var async = require('async');
+var emailsService = require('../services/emailService')
+
 var eventsModel = models.Event;
 var eventsPhotoModel = models.EventPhoto;
+var usersDinersModel = models.UserDiner;
 eventsModel.hasMany(eventsPhotoModel, { as: 'photos', foreignKey: 'idEvent' });
 
 var getEvent = function (idEvent, responseCB) {
@@ -10,7 +16,7 @@ var getEvent = function (idEvent, responseCB) {
     async.auto({
         // this function will just be passed a callback
         findEvent: function (callback) {
-            eventsModel.find({ where: { idEvent: idEvent } }).then(function (event, err) {
+            eventsModel.find({ where: { idEvent: idEvent }, include:[{model:eventsPhotoModel, as: 'photos'}] }).then(function (event, err) {
                 if (err) {
                     // diner not found 
                     return callback({ 'body': {}, 'status': 401 }, null);
@@ -35,7 +41,7 @@ var getEvent = function (idEvent, responseCB) {
 }
 
 var getAllEvents = function (idDiner, req, responseCB) {
-    var whereClosure = { idDiner: idDiner };
+    var whereClosure = sequelize.and ( queryHelper.buildQuery("Event",req.query) ) ;
 
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
@@ -78,6 +84,50 @@ var getAllEvents = function (idDiner, req, responseCB) {
     });
 }
 
+var getAllEventsWithGeo = function (req, responseCB) {
+    async.auto({
+        // this function will just be passed a callback
+        buildQuery: function (callback) {
+            try{
+                var lat = parseFloat(req.query.latitude);
+                var lng = parseFloat(req.query.longitude);
+                var maxDistance = req.query.maxDistance || req.query.max_distance || 10;
+                var maxResults = req.query.maxResults || req.query.max_results || 10;
+                var attributes = Object.keys(models.Event.attributes);
+                var location = sequelize.literal(`ST_GeomFromText('POINT(${lat} ${lng})')`);
+                var distance = sequelize.literal("6371 * acos(cos(radians("+lat+")) * cos(radians(latitude)) * cos(radians("+lng+") - radians(longitude)) + sin(radians("+lat+")) * sin(radians(latitude)))",'distance');
+                attributes.push([distance,'distance']);
+            
+                var query = {
+                    attributes: attributes,
+                    order: sequelize.col('distance'),
+                    where: sequelize.where(distance, {$lte: maxDistance}),
+                  limit: Math.ceil(maxDistance),
+                  logging: console.log
+                }
+
+                callback(null, query);
+            }catch(ex){
+                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo los events"}, 'status': 500 })
+            }
+        },
+        findAll: ['buildQuery', function (results, cb) {
+            eventsModel.findAll(results.buildQuery).then(function(events){
+                cb(null, { 'body': { 'events': events}, 'status': 200 });
+            }).catch(error => {
+                console.log(error);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los events"}, 'status': 500 })                
+            });
+        }]
+    }, function (err, results) {
+        if (!err) {
+            responseCB(null, results.findAll);
+        } else {
+            responseCB(err, null);
+        }
+    });
+}
+
 var createEvent = function (eventRequest, responseCB) {
     async.auto({
         // this function will just be passed a callback
@@ -99,7 +149,38 @@ var createEvent = function (eventRequest, responseCB) {
             }).catch(error => {
                 callback({ 'body': { 'result': "Ha ocurrido un error creando el event", 'fields': error.fields }, 'status': 500 }, null);
             });
-        }
+        },
+        getUsersForNotifications: ['createEvent', function(results, callback){
+            var event = results.createEvent.body;
+            var users = usersDinersModel.findAll({where:{idDiner: event.idDiner,
+                isCollaborator: true}}).
+                 then(function(users){
+                    callback(null, users);
+
+            }).catch(error => {
+                console.log(error);
+                callback({ 'body': { 'result': "Ha ocurrido un error enviando las notificaciones sobre el evento", 'fields': error.fields }, 'status': 500 }, null);                
+            });
+            
+        }],
+        sendNotifications: ['getUsersForNotifications', function(results, callback){
+            var event = results.createEvent.body;
+            var users = results.getUsersForNotifications;
+            for(var user in users){
+                var mailParams = {
+                    user_id: users[user].idUser,
+                    diner_id: event.idDiner,
+                    event_name: event.name,
+                    event_date: event.date,
+                    event_time: event.date,
+                    event_address: event.street + " " + event.streetNumber 
+                };
+                emailsService.sendEventNotification(mailParams, function (response) {
+                    //callback(null, null);
+                });
+            }
+            callback(null, null);
+        }]
     }, function (err, results) {
         if (!err) {
             responseCB(null, results.createEvent);
@@ -194,7 +275,7 @@ var deleteEvent = function (idEvent, responseCB) {
 }
 
 var getEventRequest = function (eventRequest) {
-    return {
+    var eventRequest = {
         name: eventRequest.name,
         street: eventRequest.street,
         streetNumber: eventRequest.streetNumber,
@@ -210,11 +291,15 @@ var getEventRequest = function (eventRequest) {
         idDiner: eventRequest.idDiner,
         photos: eventRequest.photos
     }
+
+    eventRequest = _.omitBy(eventRequest, _.isUndefined);
+    return eventRequest;    
 }
 module.exports = {
     getEventRequest: getEventRequest,
     getEvent: getEvent,
     getAllEvents: getAllEvents,
+    getAllEventsWithGeo: getAllEventsWithGeo,
     createEvent: createEvent,
     updateEvent: updateEvent,
     deleteEvent: deleteEvent

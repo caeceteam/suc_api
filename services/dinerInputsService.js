@@ -1,7 +1,12 @@
 var models = require('../models/');
-var Sequelize = require('sequelize');
+var sequelize = require('sequelize');
+var _ = require('lodash');
+var queryHelper = require('../helpers/queryHelper');
+var inputTypeService = require('./inputTypesService');
 var async = require('async');
 var dinerInputsModel = models.DinerInput;
+
+models.DinerInput.belongsTo(models.InputType, { as: 'inputType', foreignKey: 'idInputType' });
 
 var getDinerInput = function (idDinerInput, responseCB) {
     async.auto({
@@ -17,14 +22,27 @@ var getDinerInput = function (idDinerInput, responseCB) {
                     // incorrect dinerInput
                     return callback({ 'body': {}, 'status': 404 }, null);
                 }
-                callback(null, { 'body': dinerInput, 'status': 200 });
+                callback(null, dinerInput);
             }).catch(error => {
+                console.log(error);
                 callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el dinerInput " + idDinerInput, 'fields': error.fields }, 'status': 500 }, null);
             });
-        }
+        },
+        findInputType: ['findDinerInput', function (results, cb) {
+            var dinerInput = results.findDinerInput;
+            inputTypeService.getInputType(dinerInput.idInputType, function (err, result) {
+                if (!err) {
+                    cb(null, result.body);
+                } else {
+                    cb(err, null);
+                }
+            });
+        }]
     }, function (err, results) {
+        console.log(results);
         if (!err) {
-            responseCB(null, results.findDinerInput);
+            var findDinerInputResult = { dinerInput: results.findDinerInput, inputType: results.findInputType };
+            responseCB(null, { 'body': findDinerInputResult, 'status': 200 });
         } else {
             responseCB(err, null);
         }
@@ -32,7 +50,7 @@ var getDinerInput = function (idDinerInput, responseCB) {
 }
 
 var getAllDinerInputs = function (idDiner, req, responseCB) {
-    var whereClosure = { idDiner: idDiner };
+    var whereClosure = sequelize.and(queryHelper.buildQuery("DinerInput", req.query));
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;
@@ -47,9 +65,11 @@ var getAllDinerInputs = function (idDiner, req, responseCB) {
             });
         },
         paginate: ['dinerInputsCount', function (results, cb) {
-            dinerInputsModel.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure }).then(function (dinerInputsCol) {
+            var promises = [];
+            dinerInputsModel.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure, include:[{model: models.InputType, as: 'inputType'}] }).then(function (dinerInputsCol) {
                 var total_pages = Math.ceil(results.dinerInputsCount / page_size);
                 var number_of_elements = dinerInputsCol.length;
+
                 var result = {
                     dinerInputs: dinerInputsCol,
                     pagination: {
@@ -61,7 +81,9 @@ var getAllDinerInputs = function (idDiner, req, responseCB) {
                     }
                 };
                 cb(null, { 'body': result, 'status': 200 })
+
             }).catch(error => {
+                console.log(error);
                 cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los dinerInputs", 'fields': error.fields }, 'status': 500 }, null);
             });
         }]
@@ -100,7 +122,7 @@ var updateDinerInput = function (idDinerInput, dinerInputRequest, responseCB) {
         updateDinerInput: function (callback) {
             getDinerInput(idDinerInput, function (err, result) {
                 if (!err) {
-                    var dinerInput = result.body;
+                    var dinerInput = result.body.dinerInput;
                     if (dinerInput) {
                         dinerInput.update(getDinerInputRequest(dinerInputRequest)).then(function (updatedDinerInput) {
                             callback(null, { 'body': updatedDinerInput, 'status': 202 });
@@ -131,7 +153,7 @@ var deleteDinerInput = function (idDinerInput, responseCB) {
         findDinerInput: function (callback) {
             getDinerInput(idDinerInput, function (err, result) {
                 if (!err) {
-                    callback(null, result.body);
+                    callback(null, result.body.dinerInput);
                 } else {
                     callback(err, null);
                 }
@@ -152,7 +174,7 @@ var deleteDinerInput = function (idDinerInput, responseCB) {
                     cb(dinerInputResponse);
                 }).catch(error => {
                     dinerInputResponse.status = 500;
-                    dinerInputResponse.fields = error.fields                                                            
+                    dinerInputResponse.fields = error.fields
                     dinerInputResponse.result = "Error eliminando el dinerInput " + idDinerInput;
                     cb(dinerInputResponse);
                 });
@@ -171,8 +193,8 @@ var deleteDinerInput = function (idDinerInput, responseCB) {
     });
 }
 
-var getDinerInputRequest = function(request){
-    return {
+var getDinerInputRequest = function (request) {
+    var dinerInputRequest = {
         idDiner: request.idDiner,
         idInputType: request.idInputType,
         name: request.name,
@@ -181,13 +203,16 @@ var getDinerInputRequest = function(request){
         quantity: request.quantity,
         description: request.description
     };
+
+    dinerInputRequest = _.omitBy(dinerInputRequest, _.isUndefined);
+    return dinerInputRequest;    
 }
 
 module.exports = {
     getDinerInput: getDinerInput,
     getAllDinerInputs: getAllDinerInputs,
     createDinerInput: createDinerInput,
-    updateDinerInput:updateDinerInput,
+    updateDinerInput: updateDinerInput,
     deleteDinerInput: deleteDinerInput,
-    getDinerInputRequest:getDinerInputRequest
+    getDinerInputRequest: getDinerInputRequest
 };

@@ -1,5 +1,7 @@
 var models = require('../models/');
 var sequelize = require('sequelize');
+var _ = require('lodash');
+var queryHelper = require('../helpers/queryHelper');
 var async = require('async');
 var inputTypesModel = models.InputType;
 
@@ -20,6 +22,7 @@ var getInputType = function (idInputType, responseCB) {
                 }
                 callback(null, { 'body': inputType, 'status': 200 });
             }).catch(error => {
+                console.log(error);
                 callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el inputType " + idInputType, 'fields': error.fields }, 'status': 500 }, null);
             });
         }
@@ -33,7 +36,7 @@ var getInputType = function (idInputType, responseCB) {
 }
 
 var getAllInputTypes = function (req, responseCB) {
-    var whereClosure = {};
+    var whereClosure = sequelize.and ( queryHelper.buildQuery("InputType",req.query) ) ;
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;
@@ -41,7 +44,7 @@ var getAllInputTypes = function (req, responseCB) {
     async.auto({
         // this function will just be passed a callback
         inputTypesCount: function (callback) {
-            inputTypesModel.count().then(function (inputTypesQty) {
+            inputTypesModel.count({ where: whereClosure }).then(function (inputTypesQty) {
                 callback(null, inputTypesQty)
             }).catch(error => {
                 callback(error, null);
@@ -176,11 +179,14 @@ var deleteInputType = function (idInputType, responseCB) {
 }
 
 var getInputTypeRequest = function (request) {
-    return {
+    var inputTypeRequest = {
         code: request.code,
         name: request.name,
         description: request.description
     };
+
+    inputTypeRequest = _.omitBy(inputTypeRequest, _.isUndefined);
+    return inputTypeRequest;    
 };
 
 

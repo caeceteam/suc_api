@@ -14,11 +14,16 @@ var inputTypes = require('./routes/inputTypes');
 var foodTypes = require('./routes/foodTypes');
 var diners = require('./routes/diners');
 var dinerInputs = require('./routes/dinerInputs');
+var dinerFoods = require('./routes/dinerFoods');
 var dinerPhotos = require('./routes/dinerPhotos');
+var eventPhotos = require('./routes/eventPhotos');
 var assistants = require('./routes/assistants');
 var enumerations = require('./routes/enumerations');
 var events = require('./routes/events');
-
+var emails = require('./routes/emails');
+var usersDiners = require('./routes/usersDiners');
+var donations = require('./routes/donations');
+var dinerRequests = require('./routes/dinerRequests');
 
 var app = express();
 var apiRoutes = express.Router();
@@ -93,10 +98,17 @@ app.use('/api/inputTypes', inputTypes);
 app.use('/api/foodTypes', foodTypes);
 app.use('/api/diners', diners);
 app.use('/api/dinerInputs', dinerInputs);
+app.use('/api/dinerFoods', dinerFoods);
 app.use('/api/enumerations', enumerations);
 app.use('/api/dinerPhotos', dinerPhotos);
+app.use('/api/eventPhotos', eventPhotos);
 app.use('/api/assistants', assistants);
 app.use('/api/events', events);
+app.use('/api/usersDiners', usersDiners);
+app.use('/api/donations', donations);
+app.use('/api/dinerRequests', dinerRequests);
+
+app.use('/emails', emails);
 
 
 // catch 404 and forward to error handler

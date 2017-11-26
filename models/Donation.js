@@ -8,7 +8,7 @@ module.exports = function(sequelize, DataTypes) {
       primaryKey: true,
       autoIncrement: true
     },
-    idSender: {
+    idUserSender: {
       type: DataTypes.BIGINT,
       allowNull: false,
       references: {
@@ -16,7 +16,7 @@ module.exports = function(sequelize, DataTypes) {
         key: 'idUser'
       }
     },
-    idReciever: {
+    idDinerReceiver: {
       type: DataTypes.BIGINT,
       allowNull: false,
       references: {
@@ -32,12 +32,12 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.TEXT,
       allowNull: true
     },
-    startDate: {
+    creationDate: {
       type: DataTypes.DATE,
       allowNull: true
     },
-    endDate: {
-      type: DataTypes.DATE,
+    status: {
+      type: DataTypes.INTEGER(3),
       allowNull: true
     }
   }, {

@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('DonationItem', {
-    idItem: {
+    idDonationItem: {
       type: DataTypes.BIGINT,
       allowNull: false,
       primaryKey: true,
@@ -27,11 +27,15 @@ module.exports = function(sequelize, DataTypes) {
     },
     quantity: {
       type: DataTypes.FLOAT,
-      allowNull: false
+      allowNull: true
     },
     unit: {
       type: DataTypes.CHAR(5),
       allowNull: true
+    },
+    description: {
+      type: DataTypes.STRING(80),
+      allowNull: false
     }
   }, {
     timestamps:false,

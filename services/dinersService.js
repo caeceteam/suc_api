@@ -1,3 +1,6 @@
+var sequelize = require('sequelize');
+var _ = require('lodash');
+var queryHelper = require('../helpers/queryHelper');
 var models = require('../models/');
 var usersService = require('./usersService');
 var dinerPhotosService = require('./dinerPhotosService');
@@ -7,16 +10,22 @@ var dinersModel = models.Diner;
 var usersModel = models.User;
 var usersDinersModel = models.UserDiner;
 var dinersPhotoModel = models.DinerPhoto;
-dinersModel.belongsToMany(usersModel, { through: usersDinersModel, foreignKey: 'idDiner' });
-usersModel.belongsToMany(dinersModel, { through: usersDinersModel, foreignKey: 'idUser' });
+var dinerRequestsModel = models.DinerRequest;
+dinersModel.belongsToMany(usersModel, { through: usersDinersModel, foreignKey: 'idDiner', as:'users' });
+usersModel.belongsToMany(dinersModel, { through: usersDinersModel, foreignKey: 'idUser', as:'users' });
 dinersModel.hasMany(dinersPhotoModel, { as: 'photos', foreignKey: 'idDiner' });
+dinersModel.hasMany(dinerRequestsModel, { as: 'requests', foreignKey: 'idDiner' });
 
 var getDiner = function (idDiner, responseCB) {
     var dinerResponse = { status: 200, json: {} };
     async.auto({
         // this function will just be passed a callback
         findDiner: function (callback) {
-            dinersModel.find({ where: { idDiner: idDiner } }).then(function (diner, err) {
+            dinersModel.find({ where: { idDiner: idDiner }, include: 
+                [{ model: dinerRequestsModel, as: 'requests' },
+                { model: dinersPhotoModel, as: 'photos' },
+                { model: usersModel, as: 'users'}]
+             }).then(function (diner, err) {
                 if (err) {
                     // diner not found 
                     return callback({ 'body': {}, 'status': 401 }, null);
@@ -28,35 +37,23 @@ var getDiner = function (idDiner, responseCB) {
                 }
                 callback(null, { 'body': diner, 'status': 200 });
             }).catch(error => {
+                console.log(error);
                 callback({ 'body': { 'result': "Ha ocurrido un error obteniendo el diner " + idDiner, 'fields': error.fields }, 'status': 500 }, null);
             });
         },
-        findPhotos: ['findDiner', function (results, cb) {
-            results.findDiner.body.getPhotos().then(function (photos) {
-                cb(null, { 'body': photos });
-            }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo las photos para el diner " + idDiner, 'fields': error.fields }, 'status': 500 }, null);
-            });;
-        }],
-        findUsers: ['findDiner', function (results, cb) {
-            results.findDiner.body.getUsers().then(function (users) {
-                cb(null, { 'body': users });
-            }).catch(error => {
-                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los user para el diner " + idDiner, 'fields': error.fields }, 'status': 500 }, null);
-            });;
-        }],
-        endedDinerResponse: ['findPhotos', 'findUsers', function (results, cb) {
+        endedDinerResponse: ['findDiner', function (results, cb) {
             var user = {};
-            var users = results.findUsers.body;
-            var photos = results.findPhotos.body;
+            var dinerResponse = results.findDiner.body.toJSON();
+            var users = results.findDiner.body.users;
+            console.log(users.length);
+            dinerResponse.user = {};
             if (users.length == 1) {
                 user = users[0];
+                user = user.toJSON();
+                user.active = user.UserDiner.active;
+                dinerResponse.user = user;
             }
-            dinerResponse = {
-                diner: results.findDiner.body,
-                user: user,
-                photos: photos
-            };
+            dinerResponse.users = undefined;
             cb(null, { 'body': dinerResponse, 'status': 200 })
         }]
     }, function (err, results) {
@@ -69,20 +66,14 @@ var getDiner = function (idDiner, responseCB) {
 }
 
 var getAllDiners = function (req, responseCB) {
-    var whereClosure = {};
-    if (req.query.state) {
-        var enumValue = req.query.state;
-        whereClosure = { state: enumValue }
-    }
-
+    var whereClosure = sequelize.and(queryHelper.buildQuery("Diner", req.query));
     var page_size = req.query.pageSize ? req.query.pageSize : 10;
     var page = req.query.page ? req.query.page : 0;
     var total_elements;
-
     async.auto({
         // this function will just be passed a callback
         dinersCount: function (callback) {
-            dinersModel.count().then(function (dinersQty) {
+            dinersModel.count({ where: whereClosure }).then(function (dinersQty) {
                 callback(null, dinersQty)
             }).catch(error => {
                 callback(error, null);
@@ -116,6 +107,54 @@ var getAllDiners = function (req, responseCB) {
     });
 }
 
+var getAllDinersWithGeo = function (req, responseCB) {
+    async.auto({
+        // this function will just be passed a callback
+        buildQuery: function (callback) {
+            try{
+                var lat = parseFloat(req.query.latitude);
+                var lng = parseFloat(req.query.longitude);
+                var maxDistance = req.query.maxDistance || req.query.max_distance || 10;
+                var maxResults = req.query.maxResults || req.query.max_results || 10;
+                var attributes = Object.keys(models.Diner.attributes);
+                var location = sequelize.literal(`ST_GeomFromText('POINT(${lat} ${lng})')`);
+                var distance = sequelize.literal("6371 * acos(cos(radians("+lat+")) * cos(radians(latitude)) * cos(radians("+lng+") - radians(longitude)) + sin(radians("+lat+")) * sin(radians(latitude)))",'distance');
+                attributes.push([distance,'distance']);
+            
+                var query = {
+                    attributes: attributes,
+                    order: sequelize.col('distance'),
+                    where: sequelize.where(distance, {$lte: maxDistance}),
+                  limit: Math.ceil(maxDistance),
+                  logging: console.log,
+                  include:[
+                    { model: dinerRequestsModel, as: 'requests' }
+                  ]
+                }
+
+                callback(null, query);
+            }catch(ex){
+                console.log(ex);
+                callback({ 'body': { 'result': "Ha ocurrido un error obteniendo los diners"}, 'status': 500 })
+            }
+        },
+        findAll: ['buildQuery', function (results, cb) {
+            dinersModel.findAll(results.buildQuery).then(function(diners){
+                cb(null, { 'body': { 'diners': diners}, 'status': 200 });
+            }).catch(error => {
+                console.log(error);
+                cb({ 'body': { 'result': "Ha ocurrido un error obteniendo los diners"}, 'status': 500 })                
+            });
+        }]
+    }, function (err, results) {
+        if (!err) {
+            responseCB(null, results.findAll);
+        } else {
+            responseCB(err, null);
+        }
+    });
+}
+
 var createDiner = function (dinerRequest, userRequest, responseCB) {
     async.auto({
         // this function will just be passed a callback
@@ -132,19 +171,17 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
             var diner = results.createDiner.body;
             var postDiner = getDinerRequest(dinerRequest);
             if (postDiner.photos && postDiner.photos.length > 0) {
-                var insertPhotosPromises = [];                
+                var insertPhotosPromises = [];
                 for (var photo in postDiner.photos) {
                     var url = postDiner.photos[photo];
-                    var postPhoto = {url: url, idDiner: diner.idDiner};
-                    console.log(postPhoto);
-                    insertPhotosPromises.push(models.DinerPhoto.create(postPhoto));                    
+                    var postPhoto = { url: url, idDiner: diner.idDiner };
+                    insertPhotosPromises.push(models.DinerPhoto.create(postPhoto));
                 }
-                Promise.all(insertPhotosPromises).then(function(values){
+                Promise.all(insertPhotosPromises).then(function (values) {
                     cb(null, { 'body': values, 'status': 201 });
                 }).catch(error => {
-                    console.log(error);
                     cb({ 'body': { 'result': "Ha ocurrido un error creando las photos", 'fields': error.fields }, 'status': 500 }, null);
-                });;  
+                });;
             } else {
                 cb(null, { 'body': {}, 'status': 204 })
             }
@@ -155,6 +192,7 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
             var diner = results.createDiner.body;
             postUser.idDiner = diner.idDiner;
             usersModel.create(postUser).then(function (user) {
+                user.DinerUser = { active: postUser.active };
                 diner.addUser(user);
                 var result = { diner: diner, user: user };
                 cb(null, { 'body': result, 'status': 201 })
@@ -167,7 +205,6 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
                 var dinerJson = results.createUser.body.diner.toJSON();
                 var user = results.createUser.body.user;
                 var photos = results.createPhotos.body;
-                console.log(photos);
                 dinerJson.photos = photos;
                 var dinerResponse = {
                     diner: dinerJson,
@@ -183,30 +220,93 @@ var createDiner = function (dinerRequest, userRequest, responseCB) {
         if (!err) {
             responseCB(null, results.endDinerCreation);
         } else {
+            if(results.createDiner != undefined && results.createDiner.body != undefined){
+                results.createDiner.body.destroy();
+            }
             responseCB(err, null);
         }
     });
 }
 
-var updateDiner = function (idDiner, dinerRequest, responseCB) {
+var updateDiner = function (idDiner, requests, responseCB) {
+    var dinerRequest = requests.diner;
+    var userRequest = requests.user;
     async.auto({
         // this function will just be passed a callback
-        updateDiner: function (callback) {
-            dinersModel.find({ where: { idDiner: idDiner } }).then(function (diner) {
-                if (diner) {
-                    diner.update(getDinerRequest(dinerRequest)).then(function (updatedDiner) {
-                        callback(null, { 'body': updatedDiner, 'status': 202 });
-                    }).catch(error => {
-                        callback({ 'body': { 'result': 'No se puedo actualizar el comedor', 'fields': error.fields }, 'status': 500 }, null);
-                    });
-                } else {
-                    callback({ 'body': { 'result': 'No se puedo actualizar el comedor' }, 'status': 404 }, null);
-                }
+        findDiner: function (callback) {
+            dinersModel.find({where: {idDiner: idDiner}}).then(function(diner){
+                callback(null, diner);
+            }).catch( error => {
+                console.log(error);
+                callback({ 'body': { 'result': 'No se puedo actualizar el comedor' }, 'status': 404 }, null);
             });
-        }
+        },
+        findUser: function (callback) {
+            if (!_.isEmpty(userRequest)) {
+                usersService.getUser(userRequest.mail, function (err, result) {
+                    if (!err) {
+                        callback(null, result.body.user);
+                    } else {
+                        callback(err, null);
+                    }
+                });
+            } else {
+                callback(null, undefined);
+            }
+        },
+        updateDiner: ['findDiner', function (results, callback) {
+            var diner = results.findDiner;
+            if (diner) {
+                diner.update(getDinerRequest(dinerRequest)).then(function (updatedDiner) {
+                    callback(null, updatedDiner);
+                }).catch(error => {
+                    console.log(error);
+                    callback({ 'body': { 'result': 'No se puedo actualizar el comedor', 'fields': error.fields }, 'status': 500 }, null);
+                });
+            } else {
+                callback({ 'body': { 'result': 'No se puedo actualizar el comedor' }, 'status': 404 }, null);
+            }
+        }],
+        updateUser: ['findUser', function (results, callback) {
+            var user = results.findUser;
+            if (user != undefined) {
+                console.log("Aca no");
+                usersService.updateUser(userRequest.mail, userRequest, function (err, result) {
+                    var updatedUser = result.body;
+                    if (user) {
+                        usersDinersModel.upsert({ idUser: updatedUser.idUser, idDiner: idDiner, active: userRequest.active });
+                        var jsonUpdatedUser = updatedUser.toJSON();
+                        jsonUpdatedUser.active = userRequest.active;
+                        callback(null, jsonUpdatedUser);
+                    } else {
+                        callback({ 'body': { 'result': 'No se puedo actualizar el usuario' }, 'status': 404 }, null);
+                    }
+                });
+            } else {
+                callback(null, {});
+            }
+        }],
+        updatePhotos: ['findDiner', function (results, callback) {
+            var diner = results.findDiner;
+            var upsertPhotosPromises = [];
+            var photos = [];
+            if (diner) {
+                for (var photo in dinerRequest.photos) {
+                    var putPhoto = dinerRequest.photos[photo];
+                    putPhoto.idDiner = diner.idDiner;
+                    photos.push(putPhoto);
+                    upsertPhotosPromises.push(models.DinerPhoto.upsert(putPhoto));
+                }
+                Promise.all(upsertPhotosPromises).then(values => {
+                    callback(null, photos);
+                });
+            }
+        }]
     }, function (err, results) {
         if (!err) {
-            responseCB(null, results.updateDiner);
+            var dinerResponse = results.updateDiner.toJSON();
+            dinerResponse.photos = results.updatePhotos;
+            responseCB(null, { "body": { diner: dinerResponse, user: results.updateUser }, "status": 202 });
         } else {
             responseCB(err, null);
         }
@@ -219,9 +319,10 @@ var deleteDiner = function (idDiner, responseCB) {
         // this function will just be passed a callback
         findDiner: function (callback) {
             var diner;
-            getDiner(idDiner, function (err, result) {
-                diner = result.body.diner;
+            dinersModel.find({where: {idDiner: idDiner}}).then(function(diner){
                 callback(null, diner);
+            }).catch( error => {
+                callback({ 'body': { 'result': 'No se puedo actualizar el comedor' }, 'status': 404 }, null);
             });
         },
         countUsers: ['findDiner', function (results, callback) {
@@ -236,7 +337,6 @@ var deleteDiner = function (idDiner, responseCB) {
         }],
         processDiner: ['countUsers', function (results, cb) {
             var usersLength = results.countUsers.body;
-            console.log(usersLength);
             if (usersLength == 0) {
                 deleteDinerById(idDiner, function (result) {
                     cb(null, { 'body': result.result, 'status': result.status });
@@ -270,7 +370,7 @@ var deleteDinerById = function (idDiner, callback) {
     }).catch(error => {
         dinerResponse.status = 500;
         dinerResponse.result = "Error eliminando el comedor " + idDiner;
-        dinerResponse.fields = error.fields                    
+        dinerResponse.fields = error.fields
         callback(dinerResponse);
     });
 }
@@ -292,7 +392,7 @@ var setDinerByIdAsInactive = function (idDiner, callback) {
 }
 
 var getDinerRequest = function (dinerRequest) {
-    return {
+    var dinerRequest = {
         name: dinerRequest.name,
         state: dinerRequest.state,
         street: dinerRequest.street,
@@ -308,9 +408,13 @@ var getDinerRequest = function (dinerRequest) {
         mail: dinerRequest.mail,
         photos: dinerRequest.photos
     }
+
+    dinerRequest = _.omitBy(dinerRequest, _.isUndefined);
+    return dinerRequest;    
 }
 module.exports = {
     getAllDiners: getAllDiners,
+    getAllDinersWithGeo: getAllDinersWithGeo,
     getDiner: getDiner,
     createDiner: createDiner,
     updateDiner: updateDiner,

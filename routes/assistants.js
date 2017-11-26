@@ -16,13 +16,18 @@ router.get('/:idAssistant?', function (req, res, next) {
         });
     } else {
         var idDiner = req.query.idDiner;
-        assistantsService.getAllAssistants(idDiner,req, function (err, result) {
-            if (!err) {
-                res.status(result.status).json(result.body);
-            } else {
-                res.status(err.status).json(err.body);
-            }
-        });
+        if(idDiner != undefined){
+            assistantsService.getAllAssistants(idDiner,req, function (err, result) {
+                if (!err) {
+                    res.status(result.status).json(result.body);
+                } else {
+                    res.status(err.status).json(err.body);
+                }
+            });
+        }else{
+            res.status(404).json({ 'result': 'No se pudo obtener los asistentes del comedor' });
+        }
+        
     }
 });
 
