@@ -24,13 +24,12 @@ var options = {
 
 var transporter = nodemailer.createTransport(smtpTransport({
   service: 'gmail',
-  port: 587,
-  secure: false,
-  ignoreTLS: false,
-  tls: { rejectUnauthorized: true },
-  auth: {
-    user: 'sistemaunicodecomedores@gmail.com',
-    pass: 'caeceteam'
+  XOAuth2: {
+    user: "sistemaunicodecomedores@gmail.com", // Your gmail address.
+                                          // Not @developer.gserviceaccount.com
+    clientId: "29204936892-t2o7pnb6tvn8u2nppi3edjhgpjrmsl6s.apps.googleusercontent.com",
+    clientSecret: "blUaU8KMsbakFB7XKWHFZmcs",
+    refreshToken: "1/BRAMjs6ZEjDLpGiqg0kUxc_zwtylHxIovlgWkzsaj--OVBP7mcnifhfzvcKksMnI"
   }
 }));
 
