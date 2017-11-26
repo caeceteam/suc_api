@@ -23,15 +23,17 @@ var options = {
 };
 
 var transporter = nodemailer.createTransport({
-  service: "Gmail",
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
-    XOAuth2: {
-      user: "sistemaunicodecomedores@gmail.com", // Your gmail address.
-      // Not @developer.gserviceaccount.com
-      clientId: "29204936892-t2o7pnb6tvn8u2nppi3edjhgpjrmsl6s.apps.googleusercontent.com",
-      clientSecret: "blUaU8KMsbakFB7XKWHFZmcs",
-      refreshToken: "1/BRAMjs6ZEjDLpGiqg0kUxc_zwtylHxIovlgWkzsaj--OVBP7mcnifhfzvcKksMnI"
-    }
+      type: 'OAuth2',
+      user: 'sistemaunicodecomedores@gmail.com',
+      clientId: '29204936892-t2o7pnb6tvn8u2nppi3edjhgpjrmsl6s.apps.googleusercontent.com',
+      clientSecret: 'blUaU8KMsbakFB7XKWHFZmcs',
+      refreshToken: '1/BRAMjs6ZEjDLpGiqg0kUxc_zwtylHxIovlgWkzsaj--OVBP7mcnifhfzvcKksMnI',
+      accessToken: 'ya29.GlsQBa3Zuyk2w-eB3yvVrUIG-ouumF7J0rcxjZ10QD98zRf8JzGB0PGwRY5qjzdAri4cjSfKNZE_ZAZsTrGrM-6-pCTg_IPmql-V5a6dV1Rjt4kr5UvZfJMYxCwj',
+      expires: 1484314697598
   }
 });
 
