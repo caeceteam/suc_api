@@ -24,6 +24,10 @@ var options = {
 
 var transporter = nodemailer.createTransport(smtpTransport({
   service: 'gmail',
+  port: 587,
+  secure: false,
+  ignoreTLS: false,
+  tls: { rejectUnauthorized: true },
   auth: {
     user: 'sistemaunicodecomedores@gmail.com',
     pass: 'caeceteam'
