@@ -22,7 +22,7 @@ var options = {
   extName: '.hbs'
 };
 
-var transport = nodemailer.createTransport({
+var transporter = nodemailer.createTransport({
   service: "Gmail",
   auth: {
     XOAuth2: {
