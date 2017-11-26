@@ -4,7 +4,6 @@ var hbs = require('nodemailer-express-handlebars');
 var async = require('async')
 var models = require('../models/');
 var dateFormat = require('dateformat');
-var smtpTransport = require('nodemailer-smtp-transport');
 
 var dinersModel = models.Diner;
 var usersModel = models.User;

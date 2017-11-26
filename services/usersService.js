@@ -218,7 +218,7 @@ var getUserRequest = function (request, shouldCreatePassword) {
     };
 
     if (shouldCreatePassword == true) {
-        userRequest.pass = hash.update(password).digest("base64");
+        userRequest.pass = hash.update(userRequest.alias + password).digest("base64");
     }
 
     userRequest = _.omitBy(userRequest, _.isUndefined);
