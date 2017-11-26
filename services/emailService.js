@@ -23,6 +23,8 @@ var options = {
 
 var transporter = nodemailer.createTransport({
   service: 'gmail',
+  port: 587,
+  secure: false,
   auth: {
     user: 'sistemaunicodecomedores@gmail.com',
     pass: 'caeceteam'
