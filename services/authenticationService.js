@@ -153,7 +153,7 @@ var cleanPassword = function (credentials, responseCB) {
         }],
         sendMail: ['updatePassword', function(result, callback){
             emailService.sendForgotPasswordMail({user_name: userName, new_password:newPassword}, function(err, result){
-                callback(err, result);
+                callback(null, result);
             });
         }],
         generateToken: ['updatePassword', function (result, callback) {

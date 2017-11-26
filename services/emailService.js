@@ -269,10 +269,10 @@ var sendMail = function (mailOptions, callback) {
   transporter.sendMail(mailOptions, function (error, info) {
     if (error) {
       console.log(error);
-      callback({ "result": "error", "status": 500 }, null);
+      callback({ "result": "error", "status": 500 });
     } else {
       console.log('Email sent: ' + info.response);
-      callback(null, { "result": "ok", "status": 200 });
+      callback({ "result": "ok", "status": 200 });
     }
   });
 }
