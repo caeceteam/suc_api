@@ -4,6 +4,7 @@ var hbs = require('nodemailer-express-handlebars');
 var async = require('async')
 var models = require('../models/');
 var dateFormat = require('dateformat');
+var smtpTransport = require('nodemailer-smtp-transport');
 
 var dinersModel = models.Diner;
 var usersModel = models.User;
@@ -21,15 +22,13 @@ var options = {
   extName: '.hbs'
 };
 
-var transporter = nodemailer.createTransport({
+var transporter = nodemailer.createTransport(smtpTransport({
   service: 'gmail',
-  port: 587,
-  secure: false,
   auth: {
     user: 'sistemaunicodecomedores@gmail.com',
     pass: 'caeceteam'
   }
-});
+}));
 
 var sendRegistration = function (mailParams, callback) {
   var mailOptions = {
