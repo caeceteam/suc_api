@@ -24,7 +24,7 @@ var getDiner = function (idDiner, responseCB) {
             dinersModel.find({ where: { idDiner: idDiner }, include: 
                 [{ model: dinerRequestsModel, as: 'requests' },
                 { model: dinersPhotoModel, as: 'photos' },
-                { model: usersModel, as: 'users'}]
+                { model: usersModel, as: 'users', where: { role: 1 }}]
              }).then(function (diner, err) {
                 if (err) {
                     // diner not found 
