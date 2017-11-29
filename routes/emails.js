@@ -26,6 +26,16 @@ router.post('/', function (req, res, next) {
                     res.status(response.status).json(response.result);
                 });
                 break;
+			case 4:
+                result = emailsService.sendChangeDataUserMail(req.body, function (response) {
+                    res.status(response.status).json(response.result);
+                });
+                break;
+			case 5:
+                result = emailsService.sendChangePassUserMail(req.body, function (response) {
+                    res.status(response.status).json(response.result);
+                });
+                break;
         };
     } catch (ex) {
         console.log(ex);
