@@ -266,7 +266,7 @@ var sendChangeDataUserMail = function (mailParams, callback) {
   var mailOptions = {
     from: 'suc@no-reply.com',
     to: mailParams.destination_email,
-    subject: 'Se han modificado los datos de usuario',
+    subject: 'Se han modificado los datos de su usuario',
     template: 'change_person_info',
   };
 
@@ -278,7 +278,7 @@ var sendChangePassUserMail = function (mailParams, callback) {
   var mailOptions = {
     from: 'suc@no-reply.com',
     to: mailParams.destination_email,
-    subject: 'Se ha modificado su Password',
+    subject: 'Se ha modificado su contraseña',
     template: 'change_password',
   };
 
