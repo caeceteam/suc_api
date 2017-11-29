@@ -162,8 +162,6 @@ var sendForgotPasswordMail = function (mailParams, callback) {
 
     sendMail(mailOptions, callback);
   });
-
-
 }
 
 var sendDonationMailToDiner = function (mailParams, callback) {
@@ -263,6 +261,30 @@ var sendDonationUpdateMailToUser = function (mailParams, callback) {
   });
 }
 
+//Send Mail Change User Information
+var sendChangeDataUserMail = function (mailParams, callback) {
+  var mailOptions = {
+    from: 'suc@no-reply.com',
+    to: mailParams.destination_email,
+    subject: 'Se han modificado los datos de usuario',
+    template: 'change_person_info',
+  };
+
+  sendMail(mailOptions, callback);
+}
+
+//Send Mail Change User Password
+var sendChangePassUserMail = function (mailParams, callback) {
+  var mailOptions = {
+    from: 'suc@no-reply.com',
+    to: mailParams.destination_email,
+    subject: 'Se ha modificado su Password',
+    template: 'change_password',
+  };
+
+  sendMail(mailOptions, callback);
+}
+
 var sendMail = function (mailOptions, callback) {
   transporter.use('compile', hbs(options));
   transporter.sendMail(mailOptions, function (error, info) {
@@ -284,5 +306,7 @@ module.exports = {
   sendForgotPasswordMail: sendForgotPasswordMail,
   sendDonationMailToDiner: sendDonationMailToDiner,
   sendEventNotification:sendEventNotification,
-  sendDonationUpdateMailToUser:sendDonationUpdateMailToUser
+  sendDonationUpdateMailToUser:sendDonationUpdateMailToUser,
+  sendChangeDataUserMail:sendChangeDataUserMail,
+  sendChangePassUserMail:sendChangePassUserMail
 };
