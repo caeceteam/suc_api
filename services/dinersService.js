@@ -47,7 +47,7 @@ var getDiner = function (idDiner, responseCB) {
             var users = results.findDiner.body.users;
             console.log(users.length);
             dinerResponse.user = {};
-            if (users.length == 1) {
+            if (users.length >= 1) {
                 user = users[0];
                 user = user.toJSON();
                 user.active = user.UserDiner.active;
