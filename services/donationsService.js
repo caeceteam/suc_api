@@ -101,6 +101,7 @@ var getAllDonations = function (req, responseCB) {
             console.log(results);
             donationsModel.findAll({
                 offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure,
+                order:[['creationDate', 'DESC']],
                 include: [{ model: dinersModel, as: 'diner' }]
             }).then(function (donationsCol) {
                 var total_pages = Math.ceil(results.donationsCount / page_size);
