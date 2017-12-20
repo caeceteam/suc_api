@@ -24,7 +24,7 @@ var getDiner = function (idDiner, responseCB) {
             dinersModel.find({ where: { idDiner: idDiner }, include: 
                 [{ model: dinerRequestsModel, as: 'requests' },
                 { model: dinersPhotoModel, as: 'photos' },
-                { model: usersModel, as: 'users', where: { role: 1 }}]
+                { model: usersModel, as: 'users'}]
              }).then(function (diner, err) {
                 if (err) {
                     // diner not found 
@@ -80,7 +80,8 @@ var getAllDiners = function (req, responseCB) {
             });
         },
         paginate: ['dinersCount', function (results, cb) {
-            dinersModel.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure }).then(function (dinersCol) {
+            dinersModel.findAll({ offset: page_size * page, limit: Math.ceil(page_size), where: whereClosure, order: [
+                ['idDiner', 'DESC']] }).then(function (dinersCol) {
                 var total_pages = Math.ceil(results.dinersCount / page_size);
                 var number_of_elements = dinersCol.length;
                 var result = {

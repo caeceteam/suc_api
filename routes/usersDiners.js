@@ -7,7 +7,9 @@ var usersDinersService = require('../services/usersDinersService');
 router.get('/', function (req, res, next) {
     usersDinersService.getUsersDiners(req, function (err, result) {
         if (!err) {
-            res.status(result.status).json(result.body);
+            res.status(result.status)
+            .set('Cache-Control','max-age=180')
+            .json(result.body);
         } else {
             res.status(err.status).json(err.body);
         }
