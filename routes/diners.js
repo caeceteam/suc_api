@@ -19,7 +19,7 @@ router.get('/:idDiner?', function (req, res, next) {
         if(geolocatable === "true"){
             dinersService.getAllDinersWithGeo(req, function (err, result) {
                 if (!err) {
-                    res.status(result.status).json(result.body);
+                    res.status(result.status).set('Cache-Control','max-age=180').json(result.body);
                 } else {
                     res.status(err.status).json(err.body);
                 }
@@ -27,7 +27,7 @@ router.get('/:idDiner?', function (req, res, next) {
         }else{
             dinersService.getAllDiners(req, function (err, result) {
                 if (!err) {
-                    res.status(result.status).json(result.body);
+                    res.status(result.status).set('Cache-Control','max-age=180').json(result.body);
                 } else {
                     res.status(err.status).json(err.body);
                 }
